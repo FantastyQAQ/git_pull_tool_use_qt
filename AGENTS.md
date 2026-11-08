@@ -138,13 +138,13 @@
 
 ### 项目概述
 
-GitHub 批量拉取工具：基于 Qt Widgets 的 Windows 桌面程序。递归扫描指定根目录下的 Git 仓库（默认最多 6 层），筛选 origin 指向 github.com 的仓库，展示分支、落后提交数与远程地址，支持一键或勾选执行 `git pull --ff-only`。界面含工具栏（扫描/拉取/停止/全选）、仓库表格+日志分栏、状态颜色图例与状态栏（摘要+进度），表格支持右键菜单（打开所在目录、复制远程地址）。
+Git 批量拉取工具：基于 Qt Widgets 的 Windows 桌面程序。递归扫描指定根目录下的 Git 仓库（默认最多 6 层），筛选出带远端的仓库，展示分支、落后提交数与远程地址，支持一键或勾选执行 `git pull --ff-only`。界面含工具栏（扫描/拉取/停止/全选）、仓库表格+日志分栏、状态颜色图例与状态栏（摘要+进度），表格支持右键菜单（打开所在目录、复制远程地址）。扫描根目录不保存历史，每次启动都重新扫描：优先 E 盘根目录，E 盘不存在时用 C 盘。
 
 ### 构建与测试
 
 - 环境：Qt 5.12.8 + MinGW 7.3 32 位（`D:\sw\Qt5.12.8\5.12.8\mingw73_32`），C++17，qmake 构建。
-- 生成 Makefile：`qmake github_pull_tool.pro`
-- 编译（默认 release）：`mingw32-make`，产物为 `release/github_pull_tool.exe`
+- 生成 Makefile：`qmake git_pull_tool.pro`
+- 编译（默认 release）：`mingw32-make`，产物为 `release/git_pull_tool.exe`
 - **agent 调用编译验证一律使用 release 目录**：直接执行 `mingw32-make`（产物在 `release/`），不要用 debug 目录，避免污染调试产物与发布目录。
 - 无自动化测试；验证方式为运行程序扫描目录并执行拉取。
 - 发布依赖位于 `pack/app_32/`，打包配置见 `pack/pack_cfg.evb`。
@@ -163,7 +163,25 @@ GitHub 批量拉取工具：基于 Qt Widgets 的 Windows 桌面程序。递归�
 - `user/src/main.cpp`：程序入口
 - `user/src/mainwindow.cpp` / `user/inc/mainwindow.h`：主窗口 UI 与 GitManager 回传结果的展示
 - `user/src/gitmanager.cpp` / `user/inc/gitmanager.h`：Git 扫描与批量拉取功能类
-- `github_pull_tool.pro`：qmake 工程配置（core gui widgets concurrent，c++17，RC_FILE 图标）
-- `github_pull_tool_resource.rc`：exe 图标与版本信息资源
-- `README.zh_CN.md`：变更记录
-- 扫描根目录持久化于 QSettings ini（`github_pull_tool/Settings` 的 `scanRoot`）
+- `git_pull_tool.pro`：qmake 工程配置（core gui widgets，c++17，RC_FILE 图标，RC_INCLUDEPATH 与 QMAKE_PRE_LINK 保证版本资源与 appinfo.h 联动）
+- `git_pull_tool_resource.rc`：exe 图标与版本信息资源
+- `user/inc/appinfo.h`：应用元信息宏（名称 / 版本号 / 构建日期 / 作者），见下节
+- `docs/README.zh_CN.md`：完整变更记录（根目录 `README.md` 只留索引）
+- 扫描根目录不做持久化，启动时由 `default_scan_root()` 选择：优先 `E:/`，不存在则 `C:/`
+
+### 版本号与构建日期（每次改动必更新）
+
+只要改动了代码或资源，就必须在编译验证前同步更新 `user/inc/appinfo.h` 中的三个宏，缺一不可：
+
+- `APP_VERSION`：末段序号 +1，即 `SV01.001` → `SV01.002` → `SV01.003`……保持 `SVnn.nnn` 三段格式与位数不变；前两段只在发布批次升级时人工调整。
+- `APP_VERSION_NUM`：四段数字版本号，必须与 `APP_VERSION` 对应（`SV01.002` ↔ `1,2,0,0`：前两段 `01` → 主版本 `1`，末段 `002` → 次版本 `2`）。
+- `APP_BUILD_DATE`：改为改动当天日期，格式 `YYMMDD`（如 2026 年 11 月 8 日写 `261108`），不保留旧日期。
+
+注意事项：
+
+- 三个宏必须在同一次修改中一起更新，禁止只改其中一个。
+- `APP_FULL_TITLE` 由这些宏自动拼接（窗口标题、关于对话框都用它），不需要改动。
+- `git_pull_tool_resource.rc` 已 `#include "user/inc/appinfo.h"`，exe 属性里的「文件版本 / 产品版本 / 产品名 / 版权」全部由宏派生，禁止在 rc 里重新硬编码版本号或日期。
+- `.pro` 的 `QMAKE_PRE_LINK` 会在每次链接前强制重跑 windres，所以只改 `appinfo.h` 也能让 exe 属性同步刷新；不要删掉这段，否则版本资源会滞后。
+- 其它元信息（`APP_NAME`、作者、邮箱、版权年份）不在例行更新范围内，只有用户明确要求时才改。
+- 更新后重新执行 `mingw32-make`（release），确认窗口标题显示新版本号与日期；需要时用 `(Get-Item release\git_pull_tool.exe).VersionInfo` 核对 exe 属性里的版本字符串是否一致。

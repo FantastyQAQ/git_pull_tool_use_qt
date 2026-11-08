@@ -17,14 +17,11 @@ extern "C" {
 /* ===== 用户可见的品牌信息 ===== */
 
 // 工具名称（最终用户在窗口标题、exe 属性、About 对话框都看到这个名字）
-#define APP_NAME            "GitHub批量拉取工具"
-
-// 内部名（VERSIONINFO InternalName，Windows 内部跟踪用）
-#define APP_INTERNAL_NAME   "github_pull_tool"
+#define APP_NAME            "Git 批量拉取工具"
 
 // 原始文件名（VERSIONINFO OriginalFilename，必须与最终 exe 名字一致，
 // 否则 SmartScreen / 资源管理器会把改动认作「可疑行为」加分）
-#define APP_ORIGINAL_FILENAME  "github_pull_tool.exe"
+#define APP_ORIGINAL_FILENAME  "git_pull_tool.exe"
 
 // 发布者（VERSIONINFO CompanyName / LegalCopyright 用）
 //   写公司名或个人开发者名都行；写「发布者未知」反而让 SmartScreen 更怀疑。
@@ -38,13 +35,24 @@ extern "C" {
 #define APP_COPYRIGHT_YEAR  "2026"
 
 // 显示用的简短版本号字符串（窗口标题、关于对话框都用这个）
-#define APP_VERSION         "SV01.001"
+#define APP_VERSION         "SV01.012"
+
+// 数字版本号（exe 属性里的「文件版本 / 产品版本」用，四段：主.次.补丁.构建）
+//   必须与上面的 APP_VERSION 同步：SV01.012 对应 1,12,0,0
+//   （前两段 "01" → 主版本 1，末段 "012" → 次版本 12）
+#define APP_VERSION_NUM     1,12,0,0
 
 // 构建日期标签（形如 260914，即 26 年 09 月 14 日）
-#define APP_BUILD_DATE      "261106"
+#define APP_BUILD_DATE      "261108"
 
 /* ===== 完整标题 ===== */
 #define APP_FULL_TITLE      APP_NAME " " APP_VERSION " [" APP_BUILD_DATE "]"
+
+/* ===== exe 版本资源用的派生宏 ===== */
+// 产品版本带构建日期标签（如 "SV01.003 [261108]"），文件版本只留版本号。
+// git_pull_tool_resource.rc 直接引用 APP_VERSION、APP_VERSION_NUM 与本宏，
+// windres 的预处理器支持字符串拼接与逗号展开，无需在 rc 里再写一份硬编码。
+#define APP_PRODUCT_VERSION APP_VERSION " [" APP_BUILD_DATE "]"
 
 #ifdef __cplusplus
 }

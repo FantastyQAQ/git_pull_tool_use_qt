@@ -100,7 +100,7 @@ UpdateNotesDialog::UpdateNotesDialog(QWidget *parent)
     QPushButton *pBtClose = new QPushButton(tr("关闭"), this);
     pBtClose->setMinimumWidth(110);
     pBtClose->setMinimumHeight(34);
-    connect(pBtClose, SIGNAL(clicked()), this, SLOT(close()));
+    connect(pBtClose, &QPushButton::clicked, this, &QWidget::close);
 
     QHBoxLayout *pBtnLay = new QHBoxLayout();
     pBtnLay->addStretch(1);

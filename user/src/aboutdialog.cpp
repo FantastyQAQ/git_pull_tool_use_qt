@@ -82,7 +82,7 @@ AboutDialog::AboutDialog(QWidget *parent) : QDialog(parent) {
     QPushButton *pBtnOk = new QPushButton(tr("确定"), this);
     pBtnOk->setMinimumWidth(120);
     pBtnOk->setMinimumHeight(36);
-    connect(pBtnOk, SIGNAL(clicked()), this, SLOT(accept()));
+    connect(pBtnOk, &QPushButton::clicked, this, &QDialog::accept);
 
     QHBoxLayout *pBtnLay = new QHBoxLayout();
     pBtnLay->addStretch(1);
