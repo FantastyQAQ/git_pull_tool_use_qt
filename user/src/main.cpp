@@ -2,8 +2,8 @@
  * @file        main.cpp
  * @brief       程序入口：创建应用与主窗口
  * @author      lch (fantasylch@foxmail.com)
- * @version     1.0
- * @date        20261106
+ * @version     1.1
+ * @date        20261108
  *
  * @copyright   Copyright (c) 2026 by OLE, All Rights Reserved.
  *
@@ -11,6 +11,7 @@
  * <table>
  * <tr><th>Date        <th>Version   <th>Author    <th>Description
  * <tr><td>20261106    <td>1.0       <td>lch       <td>创建
+ * <tr><td>20261108    <td>1.1       <td>lch       <td>使用 Fusion 基础风格统一浅色界面外观
  * </table>
  */
 #include <QApplication>
@@ -29,6 +30,8 @@
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
+    // 统一基础控件外观，避免不同 Windows 主题影响浅色界面样式
+    a.setStyle(QStringLiteral("Fusion"));
     MainWindow w;
     w.show();
     return a.exec();
