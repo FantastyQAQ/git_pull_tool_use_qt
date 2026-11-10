@@ -26,7 +26,7 @@ extern "C" {
 // 发布者（VERSIONINFO CompanyName / LegalCopyright 用）
 //   写公司名或个人开发者名都行；写「发布者未知」反而让 SmartScreen 更怀疑。
 //   如果你后面有正式公司名，改这里一处即可。
-#define APP_AUTHOR_NAME     "欧力 / lch"
+#define APP_AUTHOR_NAME     "lch"
 
 // 邮箱
 #define APP_AUTHOR_MAIL     "fantasylch@foxmail.com"
