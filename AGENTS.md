@@ -169,19 +169,28 @@ Git 批量拉取工具：基于 Qt Widgets 的 Windows 桌面程序。递归扫�
 - `docs/README.zh_CN.md`：完整变更记录（根目录 `README.md` 只留索引）
 - 扫描根目录不做持久化，启动时由 `default_scan_root()` 选择：优先 `E:/`，不存在则 `C:/`
 
-### 版本号与构建日期（每次改动必更新）
+### 版本号维护（只在发布时升版）
 
-只要改动了代码或资源，就必须在编译验证前同步更新 `user/inc/appinfo.h` 中的三个宏，缺一不可：
+`user/inc/appinfo.h` 里三个宏的职责与更新时机不同，不要一改代码就无脑升版：
 
-- `APP_VERSION`：末段序号 +1，即 `SV01.001` → `SV01.002` → `SV01.003`……保持 `SVnn.nnn` 三段格式与位数不变；前两段只在发布批次升级时人工调整。
-- `APP_VERSION_NUM`：四段数字版本号，必须与 `APP_VERSION` 对应（`SV01.002` ↔ `1,2,0,0`：前两段 `01` → 主版本 `1`，末段 `002` → 次版本 `2`）。
-- `APP_BUILD_DATE`：改为改动当天日期，格式 `YYMMDD`（如 2026 年 11 月 8 日写 `261108`），不保留旧日期。
+- `APP_VERSION`：显示版本号 `SV01.NNN`。**只在发布版本时**递增末三位（如 `SV01.001` → `SV01.002`）。
+- `APP_VERSION_NUM`：数字版本号，必须与 `APP_VERSION` 末三位一一对应（`SV01.002` → `1,0,0,2`），与 `APP_VERSION` 同时改。
+- `APP_BUILD_DATE`：构建日期 `YYMMDD`。**每次改代码都更新**为当天日期（如 `261110` 即 2026-11-10），用来区分同版本号的多次构建。
 
-注意事项：
+判定规则：
 
-- 三个宏必须在同一次修改中一起更新，禁止只改其中一个。
+- **算发布**：用户明确说「发版 / 发布 / 升版本 / 打个版本」，或要交付可直接分发的 exe → 同时改 `APP_VERSION`、`APP_VERSION_NUM`，并把 `APP_BUILD_DATE` 设为发布当天。
+- **算小改动**：功能微调、bug 修复、注释与文案、界面细节、重构等日常改动 → 三个宏都保持原值，不动版本号。
+- **只改文档**（`AGENTS.md`、`README.md`、`docs/` 等）而不动代码 → 三个宏都不改。
+
+拿不准是否算发布时，按小改动处理，并在收尾时提醒用户「本次未升版本号，如需发版请告知」。
+
+本工程对应：三个宏均在 `user/inc/appinfo.h`；`APP_VERSION_NUM` 一律按 `1,0,0,NNN` 与 `APP_VERSION` 末三位对应。
+
+注意事项（与升版时机无关的工程约定，继续沿用）：
+
 - `APP_FULL_TITLE` 由这些宏自动拼接（窗口标题、关于对话框都用它），不需要改动。
 - `git_pull_tool_resource.rc` 已 `#include "user/inc/appinfo.h"`，exe 属性里的「文件版本 / 产品版本 / 产品名 / 版权」全部由宏派生，禁止在 rc 里重新硬编码版本号或日期。
 - `.pro` 的 `QMAKE_PRE_LINK` 会在每次链接前强制重跑 windres，所以只改 `appinfo.h` 也能让 exe 属性同步刷新；不要删掉这段，否则版本资源会滞后。
 - 其它元信息（`APP_NAME`、作者、邮箱、版权年份）不在例行更新范围内，只有用户明确要求时才改。
-- 更新后重新执行 `mingw32-make`（release），确认窗口标题显示新版本号与日期；需要时用 `(Get-Item release\git_pull_tool.exe).VersionInfo` 核对 exe 属性里的版本字符串是否一致。
+- 发版改宏后重新执行 `mingw32-make`（release），确认窗口标题显示新版本号与日期；需要时用 `(Get-Item release\git_pull_tool.exe).VersionInfo` 核对 exe 属性里的版本字符串是否一致。
