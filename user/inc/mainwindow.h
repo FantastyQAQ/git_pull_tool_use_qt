@@ -2,8 +2,8 @@
  * @file        mainwindow.h
  * @brief       主窗口类声明：UI 展示与操作入口
  * @author      lch (fantasylch@foxmail.com)
- * @version     1.4
- * @date        20261108
+ * @version     1.5
+ * @date        20261113
  * @note        Git 扫描与拉取功能由 GitManager 异步提供，本类负责展示与状态控制
  *
  * @copyright   Copyright (c) 2026 by OLE, All Rights Reserved.
@@ -16,6 +16,7 @@
  * <tr><td>20261108    <td>1.2       <td>lch       <td>按代码审查完善日志、代次、筛选、进度和复选框状态
  * <tr><td>20261108    <td>1.3       <td>lch       <td>移除设置持久化相关接口
  * <tr><td>20261108    <td>1.4       <td>lch       <td>新增批量设置行勾选状态的接口
+ * <tr><td>20261113    <td>1.5       <td>lch       <td>状态栏新增当前仓库进度与拉取流量
  * </table>
  */
 #ifndef MAINWINDOW_H
@@ -87,6 +88,8 @@ private:
     QCheckBox    *m_selectAllCb;
     QCheckBox    *m_fetchRemoteCb;
     QProgressBar *m_progress;
+    QProgressBar *m_repoProgress;   // 当前仓库所处阶段的进度（带百分比）
+    QLabel       *m_trafficLabel;   // 本轮拉取累计流量（k 与 M 两种单位）
     QLabel       *m_summaryLabel;
     QWidget      *m_updateNotesWnd = nullptr; // 更新说明窗口（WA_DeleteOnClose）
 

@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="windows-1252"?>
 <>
-  <InputFile>E:\code\qt\git_pull_tool_use_qt\release\git_pull_tool.exe</InputFile>
-  <OutputFile>E:\code\qt\git_pull_tool_use_qt\pack\git_pull_tool_boxed.exe</OutputFile>
+  <InputFile>E:\code\qt\github_pull_tool\release\git_pull_tool.exe</InputFile>
+  <OutputFile>E:\code\qt\github_pull_tool\pack\git_pull_tool_SV01.013.exe</OutputFile>
   <Files>
     <Enabled>True</Enabled>
     <DeleteExtractedOnExit>False</DeleteExtractedOnExit>
@@ -18,7 +18,7 @@
           <File>
             <Type>2</Type>
             <Name>D3Dcompiler_47.dll</Name>
-            <File>E:\code\qt\git_pull_tool_use_qt\pack\app_32\D3Dcompiler_47.dll</File>
+            <File>E:\code\qt\github_pull_tool\pack\app_32\D3Dcompiler_47.dll</File>
             <ActiveX>False</ActiveX>
             <ActiveXInstall>False</ActiveXInstall>
             <Action>0</Action>
@@ -38,7 +38,7 @@
               <File>
                 <Type>2</Type>
                 <Name>qsvgicon.dll</Name>
-                <File>E:\code\qt\git_pull_tool_use_qt\pack\app_32\iconengines\qsvgicon.dll</File>
+                <File>E:\code\qt\github_pull_tool\pack\app_32\iconengines\qsvgicon.dll</File>
                 <ActiveX>False</ActiveX>
                 <ActiveXInstall>False</ActiveXInstall>
                 <Action>0</Action>
@@ -60,7 +60,7 @@
               <File>
                 <Type>2</Type>
                 <Name>qgif.dll</Name>
-                <File>E:\code\qt\git_pull_tool_use_qt\pack\app_32\imageformats\qgif.dll</File>
+                <File>E:\code\qt\github_pull_tool\pack\app_32\imageformats\qgif.dll</File>
                 <ActiveX>False</ActiveX>
                 <ActiveXInstall>False</ActiveXInstall>
                 <Action>0</Action>
@@ -72,7 +72,7 @@
               <File>
                 <Type>2</Type>
                 <Name>qicns.dll</Name>
-                <File>E:\code\qt\git_pull_tool_use_qt\pack\app_32\imageformats\qicns.dll</File>
+                <File>E:\code\qt\github_pull_tool\pack\app_32\imageformats\qicns.dll</File>
                 <ActiveX>False</ActiveX>
                 <ActiveXInstall>False</ActiveXInstall>
                 <Action>0</Action>
@@ -84,7 +84,7 @@
               <File>
                 <Type>2</Type>
                 <Name>qico.dll</Name>
-                <File>E:\code\qt\git_pull_tool_use_qt\pack\app_32\imageformats\qico.dll</File>
+                <File>E:\code\qt\github_pull_tool\pack\app_32\imageformats\qico.dll</File>
                 <ActiveX>False</ActiveX>
                 <ActiveXInstall>False</ActiveXInstall>
                 <Action>0</Action>
@@ -96,7 +96,7 @@
               <File>
                 <Type>2</Type>
                 <Name>qjpeg.dll</Name>
-                <File>E:\code\qt\git_pull_tool_use_qt\pack\app_32\imageformats\qjpeg.dll</File>
+                <File>E:\code\qt\github_pull_tool\pack\app_32\imageformats\qjpeg.dll</File>
                 <ActiveX>False</ActiveX>
                 <ActiveXInstall>False</ActiveXInstall>
                 <Action>0</Action>
@@ -108,7 +108,7 @@
               <File>
                 <Type>2</Type>
                 <Name>qsvg.dll</Name>
-                <File>E:\code\qt\git_pull_tool_use_qt\pack\app_32\imageformats\qsvg.dll</File>
+                <File>E:\code\qt\github_pull_tool\pack\app_32\imageformats\qsvg.dll</File>
                 <ActiveX>False</ActiveX>
                 <ActiveXInstall>False</ActiveXInstall>
                 <Action>0</Action>
@@ -120,7 +120,7 @@
               <File>
                 <Type>2</Type>
                 <Name>qtga.dll</Name>
-                <File>E:\code\qt\git_pull_tool_use_qt\pack\app_32\imageformats\qtga.dll</File>
+                <File>E:\code\qt\github_pull_tool\pack\app_32\imageformats\qtga.dll</File>
                 <ActiveX>False</ActiveX>
                 <ActiveXInstall>False</ActiveXInstall>
                 <Action>0</Action>
@@ -132,7 +132,7 @@
               <File>
                 <Type>2</Type>
                 <Name>qtiff.dll</Name>
-                <File>E:\code\qt\git_pull_tool_use_qt\pack\app_32\imageformats\qtiff.dll</File>
+                <File>E:\code\qt\github_pull_tool\pack\app_32\imageformats\qtiff.dll</File>
                 <ActiveX>False</ActiveX>
                 <ActiveXInstall>False</ActiveXInstall>
                 <Action>0</Action>
@@ -144,7 +144,7 @@
               <File>
                 <Type>2</Type>
                 <Name>qwbmp.dll</Name>
-                <File>E:\code\qt\git_pull_tool_use_qt\pack\app_32\imageformats\qwbmp.dll</File>
+                <File>E:\code\qt\github_pull_tool\pack\app_32\imageformats\qwbmp.dll</File>
                 <ActiveX>False</ActiveX>
                 <ActiveXInstall>False</ActiveXInstall>
                 <Action>0</Action>
@@ -156,7 +156,7 @@
               <File>
                 <Type>2</Type>
                 <Name>qwebp.dll</Name>
-                <File>E:\code\qt\git_pull_tool_use_qt\pack\app_32\imageformats\qwebp.dll</File>
+                <File>E:\code\qt\github_pull_tool\pack\app_32\imageformats\qwebp.dll</File>
                 <ActiveX>False</ActiveX>
                 <ActiveXInstall>False</ActiveXInstall>
                 <Action>0</Action>
@@ -170,7 +170,7 @@
           <File>
             <Type>2</Type>
             <Name>libEGL.dll</Name>
-            <File>E:\code\qt\git_pull_tool_use_qt\pack\app_32\libEGL.dll</File>
+            <File>E:\code\qt\github_pull_tool\pack\app_32\libEGL.dll</File>
             <ActiveX>False</ActiveX>
             <ActiveXInstall>False</ActiveXInstall>
             <Action>0</Action>
@@ -182,7 +182,7 @@
           <File>
             <Type>2</Type>
             <Name>libgcc_s_dw2-1.dll</Name>
-            <File>E:\code\qt\git_pull_tool_use_qt\pack\app_32\libgcc_s_dw2-1.dll</File>
+            <File>E:\code\qt\github_pull_tool\pack\app_32\libgcc_s_dw2-1.dll</File>
             <ActiveX>False</ActiveX>
             <ActiveXInstall>False</ActiveXInstall>
             <Action>0</Action>
@@ -194,7 +194,7 @@
           <File>
             <Type>2</Type>
             <Name>libGLESV2.dll</Name>
-            <File>E:\code\qt\git_pull_tool_use_qt\pack\app_32\libGLESV2.dll</File>
+            <File>E:\code\qt\github_pull_tool\pack\app_32\libGLESV2.dll</File>
             <ActiveX>False</ActiveX>
             <ActiveXInstall>False</ActiveXInstall>
             <Action>0</Action>
@@ -206,7 +206,7 @@
           <File>
             <Type>2</Type>
             <Name>libstdc++-6.dll</Name>
-            <File>E:\code\qt\git_pull_tool_use_qt\pack\app_32\libstdc++-6.dll</File>
+            <File>E:\code\qt\github_pull_tool\pack\app_32\libstdc++-6.dll</File>
             <ActiveX>False</ActiveX>
             <ActiveXInstall>False</ActiveXInstall>
             <Action>0</Action>
@@ -218,7 +218,7 @@
           <File>
             <Type>2</Type>
             <Name>libwinpthread-1.dll</Name>
-            <File>E:\code\qt\git_pull_tool_use_qt\pack\app_32\libwinpthread-1.dll</File>
+            <File>E:\code\qt\github_pull_tool\pack\app_32\libwinpthread-1.dll</File>
             <ActiveX>False</ActiveX>
             <ActiveXInstall>False</ActiveXInstall>
             <Action>0</Action>
@@ -230,7 +230,7 @@
           <File>
             <Type>2</Type>
             <Name>opengl32sw.dll</Name>
-            <File>E:\code\qt\git_pull_tool_use_qt\pack\app_32\opengl32sw.dll</File>
+            <File>E:\code\qt\github_pull_tool\pack\app_32\opengl32sw.dll</File>
             <ActiveX>False</ActiveX>
             <ActiveXInstall>False</ActiveXInstall>
             <Action>0</Action>
@@ -250,7 +250,7 @@
               <File>
                 <Type>2</Type>
                 <Name>qwindows.dll</Name>
-                <File>E:\code\qt\git_pull_tool_use_qt\pack\app_32\platforms\qwindows.dll</File>
+                <File>E:\code\qt\github_pull_tool\pack\app_32\platforms\qwindows.dll</File>
                 <ActiveX>False</ActiveX>
                 <ActiveXInstall>False</ActiveXInstall>
                 <Action>0</Action>
@@ -264,7 +264,7 @@
           <File>
             <Type>2</Type>
             <Name>Qt5Core.dll</Name>
-            <File>E:\code\qt\git_pull_tool_use_qt\pack\app_32\Qt5Core.dll</File>
+            <File>E:\code\qt\github_pull_tool\pack\app_32\Qt5Core.dll</File>
             <ActiveX>False</ActiveX>
             <ActiveXInstall>False</ActiveXInstall>
             <Action>0</Action>
@@ -276,7 +276,7 @@
           <File>
             <Type>2</Type>
             <Name>Qt5Gui.dll</Name>
-            <File>E:\code\qt\git_pull_tool_use_qt\pack\app_32\Qt5Gui.dll</File>
+            <File>E:\code\qt\github_pull_tool\pack\app_32\Qt5Gui.dll</File>
             <ActiveX>False</ActiveX>
             <ActiveXInstall>False</ActiveXInstall>
             <Action>0</Action>
@@ -288,7 +288,7 @@
           <File>
             <Type>2</Type>
             <Name>Qt5Svg.dll</Name>
-            <File>E:\code\qt\git_pull_tool_use_qt\pack\app_32\Qt5Svg.dll</File>
+            <File>E:\code\qt\github_pull_tool\pack\app_32\Qt5Svg.dll</File>
             <ActiveX>False</ActiveX>
             <ActiveXInstall>False</ActiveXInstall>
             <Action>0</Action>
@@ -300,7 +300,7 @@
           <File>
             <Type>2</Type>
             <Name>Qt5Widgets.dll</Name>
-            <File>E:\code\qt\git_pull_tool_use_qt\pack\app_32\Qt5Widgets.dll</File>
+            <File>E:\code\qt\github_pull_tool\pack\app_32\Qt5Widgets.dll</File>
             <ActiveX>False</ActiveX>
             <ActiveXInstall>False</ActiveXInstall>
             <Action>0</Action>
@@ -320,7 +320,7 @@
               <File>
                 <Type>2</Type>
                 <Name>qwindowsvistastyle.dll</Name>
-                <File>E:\code\qt\git_pull_tool_use_qt\pack\app_32\styles\qwindowsvistastyle.dll</File>
+                <File>E:\code\qt\github_pull_tool\pack\app_32\styles\qwindowsvistastyle.dll</File>
                 <ActiveX>False</ActiveX>
                 <ActiveXInstall>False</ActiveXInstall>
                 <Action>0</Action>
@@ -342,7 +342,7 @@
               <File>
                 <Type>2</Type>
                 <Name>qt_ar.qm</Name>
-                <File>E:\code\qt\git_pull_tool_use_qt\pack\app_32\translations\qt_ar.qm</File>
+                <File>E:\code\qt\github_pull_tool\pack\app_32\translations\qt_ar.qm</File>
                 <ActiveX>False</ActiveX>
                 <ActiveXInstall>False</ActiveXInstall>
                 <Action>0</Action>
@@ -354,7 +354,7 @@
               <File>
                 <Type>2</Type>
                 <Name>qt_bg.qm</Name>
-                <File>E:\code\qt\git_pull_tool_use_qt\pack\app_32\translations\qt_bg.qm</File>
+                <File>E:\code\qt\github_pull_tool\pack\app_32\translations\qt_bg.qm</File>
                 <ActiveX>False</ActiveX>
                 <ActiveXInstall>False</ActiveXInstall>
                 <Action>0</Action>
@@ -366,7 +366,7 @@
               <File>
                 <Type>2</Type>
                 <Name>qt_ca.qm</Name>
-                <File>E:\code\qt\git_pull_tool_use_qt\pack\app_32\translations\qt_ca.qm</File>
+                <File>E:\code\qt\github_pull_tool\pack\app_32\translations\qt_ca.qm</File>
                 <ActiveX>False</ActiveX>
                 <ActiveXInstall>False</ActiveXInstall>
                 <Action>0</Action>
@@ -378,7 +378,7 @@
               <File>
                 <Type>2</Type>
                 <Name>qt_cs.qm</Name>
-                <File>E:\code\qt\git_pull_tool_use_qt\pack\app_32\translations\qt_cs.qm</File>
+                <File>E:\code\qt\github_pull_tool\pack\app_32\translations\qt_cs.qm</File>
                 <ActiveX>False</ActiveX>
                 <ActiveXInstall>False</ActiveXInstall>
                 <Action>0</Action>
@@ -390,7 +390,7 @@
               <File>
                 <Type>2</Type>
                 <Name>qt_da.qm</Name>
-                <File>E:\code\qt\git_pull_tool_use_qt\pack\app_32\translations\qt_da.qm</File>
+                <File>E:\code\qt\github_pull_tool\pack\app_32\translations\qt_da.qm</File>
                 <ActiveX>False</ActiveX>
                 <ActiveXInstall>False</ActiveXInstall>
                 <Action>0</Action>
@@ -402,7 +402,7 @@
               <File>
                 <Type>2</Type>
                 <Name>qt_de.qm</Name>
-                <File>E:\code\qt\git_pull_tool_use_qt\pack\app_32\translations\qt_de.qm</File>
+                <File>E:\code\qt\github_pull_tool\pack\app_32\translations\qt_de.qm</File>
                 <ActiveX>False</ActiveX>
                 <ActiveXInstall>False</ActiveXInstall>
                 <Action>0</Action>
@@ -414,7 +414,7 @@
               <File>
                 <Type>2</Type>
                 <Name>qt_en.qm</Name>
-                <File>E:\code\qt\git_pull_tool_use_qt\pack\app_32\translations\qt_en.qm</File>
+                <File>E:\code\qt\github_pull_tool\pack\app_32\translations\qt_en.qm</File>
                 <ActiveX>False</ActiveX>
                 <ActiveXInstall>False</ActiveXInstall>
                 <Action>0</Action>
@@ -426,7 +426,7 @@
               <File>
                 <Type>2</Type>
                 <Name>qt_es.qm</Name>
-                <File>E:\code\qt\git_pull_tool_use_qt\pack\app_32\translations\qt_es.qm</File>
+                <File>E:\code\qt\github_pull_tool\pack\app_32\translations\qt_es.qm</File>
                 <ActiveX>False</ActiveX>
                 <ActiveXInstall>False</ActiveXInstall>
                 <Action>0</Action>
@@ -438,7 +438,7 @@
               <File>
                 <Type>2</Type>
                 <Name>qt_fi.qm</Name>
-                <File>E:\code\qt\git_pull_tool_use_qt\pack\app_32\translations\qt_fi.qm</File>
+                <File>E:\code\qt\github_pull_tool\pack\app_32\translations\qt_fi.qm</File>
                 <ActiveX>False</ActiveX>
                 <ActiveXInstall>False</ActiveXInstall>
                 <Action>0</Action>
@@ -450,7 +450,7 @@
               <File>
                 <Type>2</Type>
                 <Name>qt_fr.qm</Name>
-                <File>E:\code\qt\git_pull_tool_use_qt\pack\app_32\translations\qt_fr.qm</File>
+                <File>E:\code\qt\github_pull_tool\pack\app_32\translations\qt_fr.qm</File>
                 <ActiveX>False</ActiveX>
                 <ActiveXInstall>False</ActiveXInstall>
                 <Action>0</Action>
@@ -462,7 +462,7 @@
               <File>
                 <Type>2</Type>
                 <Name>qt_gd.qm</Name>
-                <File>E:\code\qt\git_pull_tool_use_qt\pack\app_32\translations\qt_gd.qm</File>
+                <File>E:\code\qt\github_pull_tool\pack\app_32\translations\qt_gd.qm</File>
                 <ActiveX>False</ActiveX>
                 <ActiveXInstall>False</ActiveXInstall>
                 <Action>0</Action>
@@ -474,7 +474,7 @@
               <File>
                 <Type>2</Type>
                 <Name>qt_he.qm</Name>
-                <File>E:\code\qt\git_pull_tool_use_qt\pack\app_32\translations\qt_he.qm</File>
+                <File>E:\code\qt\github_pull_tool\pack\app_32\translations\qt_he.qm</File>
                 <ActiveX>False</ActiveX>
                 <ActiveXInstall>False</ActiveXInstall>
                 <Action>0</Action>
@@ -486,7 +486,7 @@
               <File>
                 <Type>2</Type>
                 <Name>qt_hu.qm</Name>
-                <File>E:\code\qt\git_pull_tool_use_qt\pack\app_32\translations\qt_hu.qm</File>
+                <File>E:\code\qt\github_pull_tool\pack\app_32\translations\qt_hu.qm</File>
                 <ActiveX>False</ActiveX>
                 <ActiveXInstall>False</ActiveXInstall>
                 <Action>0</Action>
@@ -498,7 +498,7 @@
               <File>
                 <Type>2</Type>
                 <Name>qt_it.qm</Name>
-                <File>E:\code\qt\git_pull_tool_use_qt\pack\app_32\translations\qt_it.qm</File>
+                <File>E:\code\qt\github_pull_tool\pack\app_32\translations\qt_it.qm</File>
                 <ActiveX>False</ActiveX>
                 <ActiveXInstall>False</ActiveXInstall>
                 <Action>0</Action>
@@ -510,7 +510,7 @@
               <File>
                 <Type>2</Type>
                 <Name>qt_ja.qm</Name>
-                <File>E:\code\qt\git_pull_tool_use_qt\pack\app_32\translations\qt_ja.qm</File>
+                <File>E:\code\qt\github_pull_tool\pack\app_32\translations\qt_ja.qm</File>
                 <ActiveX>False</ActiveX>
                 <ActiveXInstall>False</ActiveXInstall>
                 <Action>0</Action>
@@ -522,7 +522,7 @@
               <File>
                 <Type>2</Type>
                 <Name>qt_ko.qm</Name>
-                <File>E:\code\qt\git_pull_tool_use_qt\pack\app_32\translations\qt_ko.qm</File>
+                <File>E:\code\qt\github_pull_tool\pack\app_32\translations\qt_ko.qm</File>
                 <ActiveX>False</ActiveX>
                 <ActiveXInstall>False</ActiveXInstall>
                 <Action>0</Action>
@@ -534,7 +534,7 @@
               <File>
                 <Type>2</Type>
                 <Name>qt_lv.qm</Name>
-                <File>E:\code\qt\git_pull_tool_use_qt\pack\app_32\translations\qt_lv.qm</File>
+                <File>E:\code\qt\github_pull_tool\pack\app_32\translations\qt_lv.qm</File>
                 <ActiveX>False</ActiveX>
                 <ActiveXInstall>False</ActiveXInstall>
                 <Action>0</Action>
@@ -546,7 +546,7 @@
               <File>
                 <Type>2</Type>
                 <Name>qt_pl.qm</Name>
-                <File>E:\code\qt\git_pull_tool_use_qt\pack\app_32\translations\qt_pl.qm</File>
+                <File>E:\code\qt\github_pull_tool\pack\app_32\translations\qt_pl.qm</File>
                 <ActiveX>False</ActiveX>
                 <ActiveXInstall>False</ActiveXInstall>
                 <Action>0</Action>
@@ -558,7 +558,7 @@
               <File>
                 <Type>2</Type>
                 <Name>qt_ru.qm</Name>
-                <File>E:\code\qt\git_pull_tool_use_qt\pack\app_32\translations\qt_ru.qm</File>
+                <File>E:\code\qt\github_pull_tool\pack\app_32\translations\qt_ru.qm</File>
                 <ActiveX>False</ActiveX>
                 <ActiveXInstall>False</ActiveXInstall>
                 <Action>0</Action>
@@ -570,7 +570,7 @@
               <File>
                 <Type>2</Type>
                 <Name>qt_sk.qm</Name>
-                <File>E:\code\qt\git_pull_tool_use_qt\pack\app_32\translations\qt_sk.qm</File>
+                <File>E:\code\qt\github_pull_tool\pack\app_32\translations\qt_sk.qm</File>
                 <ActiveX>False</ActiveX>
                 <ActiveXInstall>False</ActiveXInstall>
                 <Action>0</Action>
@@ -582,7 +582,7 @@
               <File>
                 <Type>2</Type>
                 <Name>qt_uk.qm</Name>
-                <File>E:\code\qt\git_pull_tool_use_qt\pack\app_32\translations\qt_uk.qm</File>
+                <File>E:\code\qt\github_pull_tool\pack\app_32\translations\qt_uk.qm</File>
                 <ActiveX>False</ActiveX>
                 <ActiveXInstall>False</ActiveXInstall>
                 <Action>0</Action>
@@ -594,7 +594,7 @@
               <File>
                 <Type>2</Type>
                 <Name>qt_zh_TW.qm</Name>
-                <File>E:\code\qt\git_pull_tool_use_qt\pack\app_32\translations\qt_zh_TW.qm</File>
+                <File>E:\code\qt\github_pull_tool\pack\app_32\translations\qt_zh_TW.qm</File>
                 <ActiveX>False</ActiveX>
                 <ActiveXInstall>False</ActiveXInstall>
                 <Action>0</Action>

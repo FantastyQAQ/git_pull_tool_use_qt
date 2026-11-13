@@ -2,8 +2,8 @@
  * @file        gitmanager.cpp
  * @brief       Git 仓库扫描与批量拉取功能实现
  * @author      lch (fantasylch@foxmail.com)
- * @version     1.3
- * @date        20261108
+ * @version     1.5
+ * @date        20261113
  * @note        扫描在独立 QThread 中并发执行；拉取由异步子进程串行驱动，失败/超时/中止均能收尾
  *
  * @copyright   Copyright (c) 2026 by OLE, All Rights Reserved.
@@ -15,6 +15,8 @@
  * <tr><td>20261106    <td>1.1       <td>lch       <td>扫描移入后台线程；去重 remote 查询；fetch 加 --no-tags
  * <tr><td>20261108    <td>1.2       <td>lch       <td>按代码审查完善中止保护、结果判定、超时与队列收尾
  * <tr><td>20261108    <td>1.3       <td>lch       <td>单仓 git 调用由 6 次合并为 2 次，扫描改为多线程并发采集
+ * <tr><td>20261113    <td>1.4       <td>lch       <td>扫描先 fetch 再统计差异，脏仓库同样显示落后/领先数
+ * <tr><td>20261113    <td>1.5       <td>lch       <td>拉取改为 --progress 实时解析当前阶段百分比与传输流量
  * </table>
  */
 #include "gitmanager.h"
@@ -23,6 +25,7 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QProcessEnvironment>
+#include <QRegularExpression>
 #include <QSet>
 #include <QThread>
 #include <QTimer>
@@ -120,6 +123,26 @@ QString short_error(const GitResult &result)
     if (message.length() > kMaxErrorChars)
         message = message.left(kMaxErrorChars) + QStringLiteral("…");
     return message;
+}
+
+/**
+ * @brief       根据领先/落后提交数生成展示用的同步差异文本
+ *
+ * @param[in]   ahead 领先上游的提交数
+ * @param[in]   behind 落后上游的提交数
+ * @return      差异文本；同时领先和落后时显示为分叉
+ * @details     仅负责文案，不做拉取判定；拉取资格由调用方根据 ahead/behind 决定
+ * @doxygen_sig_fp 68ccd7e5866822f6
+ */
+QString describe_sync_state(int ahead, int behind)
+{
+    if (ahead > 0 && behind > 0)
+        return QStringLiteral("⇅ 分叉：领先 %1 / 落后 %2").arg(ahead).arg(behind);
+    if (behind > 0)
+        return QStringLiteral("↓ 落后 %1 个提交").arg(behind);
+    if (ahead > 0)
+        return QStringLiteral("↑ 领先 %1 个提交").arg(ahead);
+    return QStringLiteral("✓ 已是最新");
 }
 
 /**
@@ -544,10 +567,11 @@ QStringList GitManager::find_git_repos(const QString &rootDir, int maxDepth)
  * @param[in]   remoteUrl 预检得到的远端地址
  * @param[in]   fetchRemote 是否先同步远程引用
  * @return      填充完成的仓库状态结构体（scanned 恒为 true）
- * @details     分支、上游、ahead/behind、工作区脏全部来自一次
- *              git status --porcelain=v2 --branch，单仓只起 2 个 git 子进程
- *              （勾选同步时再加 1 次 fetch）；先做纯文件系统的进行中检查，
- *              命中即提前返回，省掉子进程开销；
+ * @details     勾选同步时先 fetch，再执行 git status --porcelain=v2 --branch，
+ *              保证 ahead/behind 基于最新远程引用；分支、上游、工作区脏也来自这次 status，
+ *              单仓只起 2 个 git 子进程（勾选同步时再加 1 次 fetch）；
+ *              先做纯文件系统的进行中检查，命中即提前返回，省掉子进程开销；
+ *              工作区有改动的仓库同样显示差异，但 pullable 恒为 false；
  *              任何失败都明确反映在状态中，异常仓库 pullable 恒为 false
  * @doxygen_sig_fp 7c8a0f76d2348713
  */
@@ -560,6 +584,15 @@ RepoInfo GitManager::examine_repo(const QString &repoPath, const QString &rootDi
     info.remoteUrl = remoteUrl;
     // 已采集但尚未通过全部检查，pullable 保持 false，异常状态不会进入拉取队列
     info.scanned = true;
+
+    // 先同步远程引用：status 里的 ahead/behind 依赖远程跟踪引用，必须在 fetch 之后读取。
+    // fetch 失败时仍继续读取本地信息，最终状态以 fetch 失败为准，不误报“已是最新”
+    QString fetchError;
+    if (fetchRemote) {
+        fetchError = fetch_remote_refs(repoPath);
+        if (!fetchError.isEmpty())
+            emit log_message(QStringLiteral("  ❌ %1：fetch 失败：%2").arg(info.path, fetchError), Qt::red);
+    }
 
     // 一次 status 调用同时拿到分支、上游、ahead/behind 与工作区脏状态
     // --untracked-files=no：未跟踪文件不影响 pull，避免大仓库遍历未跟踪目录
@@ -606,26 +639,6 @@ RepoInfo GitManager::examine_repo(const QString &repoPath, const QString &rootDi
     }
     info.upstream = snap.upstream;
 
-    // 脏检查：工作区有改动的仓库不自动 pull（避免覆盖用户改动）
-    if (snap.dirty) {
-        info.dirty = true;
-        info.status = QStringLiteral("工作区有改动");
-        return info;
-    }
-
-    // 默认只读本地远程引用；勾选同步后才执行网络 fetch，避免扫描修改远程跟踪引用。
-    // 即使 fetch 失败也继续用已有远程引用统计，保留“本地领先”等有效信息，但最终不可拉取。
-    QString fetchError;
-    if (fetchRemote) {
-        const GitResult fetchRes = run_git(
-            repoPath, {QStringLiteral("fetch"), QStringLiteral("--prune"),
-                       QStringLiteral("--no-tags"), QStringLiteral("--quiet")}, kFetchTimeoutMs);
-        if (!fetchRes.ok) {
-            fetchError = short_error(fetchRes);
-            emit log_message(QStringLiteral("  ❌ %1：fetch 失败：%2").arg(info.path, fetchError), Qt::red);
-        }
-    }
-
     // branch.ab 只在本地存在上游引用时出现；缺失说明上游引用已被删除
     if (!snap.hasCounts) {
         info.status = QStringLiteral("统计失败：上游引用缺失");
@@ -634,24 +647,44 @@ RepoInfo GitManager::examine_repo(const QString &repoPath, const QString &rootDi
     info.ahead = snap.ahead;
     info.behind = snap.behind;
 
-    // fetch 失败时旧引用只作参考：优先展示失败原因，避免误报“已是最新”或“可更新”。
+    // fetch 失败时远程引用可能已过期：优先展示失败原因，避免误报“已是最新”或“可更新”
     if (!fetchError.isEmpty()) {
         info.status = QStringLiteral("fetch 失败：%1").arg(fetchError);
         return info; // pullable 保持 false
     }
 
-    if (info.behind == 0) {
-        info.status = info.ahead > 0 ? QStringLiteral("↑ 领先 %1 个提交").arg(info.ahead)
-                                     : QStringLiteral("✓ 已是最新");
-    } else {
-        info.status = QStringLiteral("↓ 落后 %1 个提交").arg(info.behind);
+    // 差异始终展示；工作区有改动的仓库只显示差异，不参与拉取（避免覆盖用户改动）
+    const QString diffText = describe_sync_state(info.ahead, info.behind);
+    if (snap.dirty) {
+        info.dirty = true;
+        info.status = QStringLiteral("工作区有改动 · %1").arg(diffText);
+        return info;
     }
+    info.status = diffText;
 
-    // 本地领先可能产生分叉，非纯落后场景不自动 pull；成功后状态机已可安全 fast-forward
+    // 本地领先或分叉时不自动 pull，避免产生合并；纯落后或已最新时可安全 fast-forward
     if (info.ahead > 0)
         return info;
     info.pullable = true;
     return info;
+}
+
+/**
+ * @brief       同步仓库的远程跟踪引用（git fetch --prune --no-tags）
+ *
+ * @param[in]   repoPath 仓库根目录
+ * @return      失败时返回截断后的错误信息；成功时返回空串
+ * @details     只更新 refs/remotes 下的远程跟踪引用，不改动工作区与当前分支，
+ *              因此有未提交改动的仓库也能安全同步；
+ *              调用方必须在读取 ahead/behind 之前调用，否则统计仍沿用旧引用
+ * @doxygen_sig_fp ca3ad17cb1460803
+ */
+QString GitManager::fetch_remote_refs(const QString &repoPath)
+{
+    const GitResult fetchRes = run_git(
+        repoPath, {QStringLiteral("fetch"), QStringLiteral("--prune"),
+                   QStringLiteral("--no-tags"), QStringLiteral("--quiet")}, kFetchTimeoutMs);
+    return fetchRes.ok ? QString() : short_error(fetchRes);
 }
 
 /**
@@ -716,6 +749,8 @@ void GitManager::start_pull(const QVector<int> &indices, const QVector<RepoInfo>
     m_pullRepos = repos;
     m_pullCursor = 0;
     m_pullTimedOut = false;
+    m_pullDoneBytes = 0;
+    m_pullRepoBytes = 0;
 
     // 经事件循环投递，保证 start_pull 返回后才开始子进程操作
     QTimer::singleShot(0, this, &GitManager::process_next_pull);
@@ -781,11 +816,23 @@ void GitManager::process_next_pull()
     m_headBefore = before.out.trimmed();
     m_pullTimedOut = false;
 
-    // 异步启动 git pull --ff-only；看门狗限制单次拉取耗时
+    // 当前仓库的进度与流量从零开始统计，进度条先归零
+    m_pullRepoBytes = 0;
+    m_pullLineBytes.clear();
+    m_pullErrText.clear();
+    emit pull_repo_progress(0);
+
+    // 异步启动 git pull --ff-only --progress；看门狗限制单次拉取耗时
     QProcess *proc = new QProcess(this);
     m_pullProc = proc;
     proc->setWorkingDirectory(repo.absolutePath);
     proc->setProcessEnvironment(make_git_environment());
+
+    // 进度输出走 stderr，边运行边读取，避免管道写满导致 git 阻塞
+    connect(proc, &QProcess::readyReadStandardError, this, [this, proc]() {
+        if (m_pullProc == proc)
+            consume_pull_stderr(proc, false);
+    });
 
     // 正常结束：统一交给 finish_pull_process 回收进程并推进队列
     connect(proc, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
@@ -804,7 +851,8 @@ void GitManager::process_next_pull()
                             QStringLiteral("无法启动 git，请确认已安装并加入 PATH"));
     });
 
-    proc->start(QStringLiteral("git"), {QStringLiteral("pull"), QStringLiteral("--ff-only")});
+    proc->start(QStringLiteral("git"),
+                {QStringLiteral("pull"), QStringLiteral("--ff-only"), QStringLiteral("--progress")});
     m_pullWatchdog->start(kPullTimeoutMs);
 }
 
@@ -828,10 +876,12 @@ void GitManager::finish_pull_process(int repoIndex, int exitCode,
         return;
 
     m_pullWatchdog->stop();
+    // 先吃掉残留的 stderr（含末尾无换行的最后一行），再组装结果
+    consume_pull_stderr(proc, true);
     GitResult res;
     res.exitCode = exitCode;
     res.out = QString::fromUtf8(proc->readAllStandardOutput());
-    res.err = QString::fromUtf8(proc->readAllStandardError());
+    res.err = m_pullErrText;
     if (!startError.isEmpty())
         res.err = startError;
     if (m_pullTimedOut)
@@ -856,6 +906,12 @@ void GitManager::finish_pull_process(int repoIndex, int exitCode,
  */
 void GitManager::finish_pull_item(int repoIndex, const GitResult &res)
 {
+    // 当前仓库已结束：流量并入本轮累计，进度条补满到 100%
+    m_pullDoneBytes += m_pullRepoBytes;
+    m_pullRepoBytes = 0;
+    emit pull_repo_progress(100);
+    emit pull_traffic(m_pullDoneBytes);
+
     if (res.ok) {
         // 比较拉取前后的 HEAD：只有提交真正前进才算刚更新
         const GitResult after = run_git(m_pullRepos[repoIndex].absolutePath,
@@ -898,6 +954,99 @@ void GitManager::kill_current_pull()
 {
     if (m_pullProc)
         m_pullProc->kill();
+}
+
+/**
+ * @brief       读取拉取进程的 stderr 并逐行解析进度输出
+ *
+ * @param[in]   proc 当前运行的 git pull 进程
+ * @param[in]   flushTail true 表示进程已结束，残留内容需作为最后一行处理
+ * @return      none
+ * @details     git 的进度行用回车符原地刷新，因此回车与换行都视为行结束；
+ *              未结束的尾巴保存在 m_pullLineBytes 中，等待下一次读取拼接，避免截断多字节字符；
+ *              非进度行累积到 m_pullErrText，失败时用于展示真正的错误原因
+ * @doxygen_sig_fp 7af15fc1807ac242
+ */
+void GitManager::consume_pull_stderr(QProcess *proc, bool flushTail)
+{
+    m_pullLineBytes.append(proc->readAllStandardError());
+
+    // 进度行交给解析函数更新界面，其余行记入错误文本
+    auto handle_line = [this](const QString &line) {
+        if (!parse_pull_progress_line(line))
+            m_pullErrText += line.trimmed() + QLatin1Char('\n');
+    };
+
+    // 扫描已有字节，遇到 \r 或 \n 就切出一整行
+    int lineStart = 0;
+    for (int i = 0; i < m_pullLineBytes.size(); ++i) {
+        const char c = m_pullLineBytes.at(i);
+        if (c != '\r' && c != '\n')
+            continue;
+        handle_line(QString::fromUtf8(m_pullLineBytes.mid(lineStart, i - lineStart)));
+        lineStart = i + 1;
+    }
+    // 删除已处理的部分，只保留最后一段未结束的内容
+    m_pullLineBytes.remove(0, lineStart);
+
+    // 进程已结束时残留内容不会再有行结束符，直接当作完整的一行处理
+    if (flushTail && !m_pullLineBytes.isEmpty()) {
+        handle_line(QString::fromUtf8(m_pullLineBytes));
+        m_pullLineBytes.clear();
+    }
+}
+
+/**
+ * @brief       解析单行 git pull 进度输出，更新当前阶段百分比与累计流量
+ *
+ * @param[in]   rawLine 一行原始输出（已按 \r 或 \n 切分）
+ * @return      true 表示该行是进度/服务端统计信息，不应计入错误文本
+ * @details     百分比取最新值，阶段切换时 git 会从 0 重新计数，直接展示即可；
+ *              传输量取本仓库见过的最大值（字节数只增不减），
+ *              Receiving 与 Unpacking 行会重复报告同一数值，取最大值即可去重
+ * @doxygen_sig_fp d9130b1eaa8e1117
+ */
+bool GitManager::parse_pull_progress_line(const QString &rawLine)
+{
+    // 当前阶段百分比，如 "Receiving objects:  45% (45/100)"；远端阶段带 "remote: " 前缀
+    static const QRegularExpression percentRe(
+        QStringLiteral("^(?:remote: )?[^:]+:\\s+(\\d{1,3})%"));
+    // 传输量，如 "Receiving objects: 100% (3/3), 1.20 MiB | 1.00 MiB/s, done."；小数据量时单位为 bytes
+    static const QRegularExpression sizeRe(QStringLiteral(
+        "^(?:Receiving|Unpacking) objects:.*\\(\\d+/\\d+\\),\\s*(\\d+(?:\\.\\d+)?)\\s*(bytes|KiB|MiB|GiB)\\b"));
+
+    const QString line = rawLine.trimmed();
+    if (line.isEmpty())
+        return true;
+
+    // remote: 开头的行是服务端的计数/压缩/传输统计，不属于错误原因
+    const bool isRemoteLine = line.startsWith(QLatin1String("remote:"));
+
+    const QRegularExpressionMatch percentMatch = percentRe.match(line);
+    if (percentMatch.hasMatch())
+        emit pull_repo_progress(qMin(100, percentMatch.captured(1).toInt()));
+
+    const QRegularExpressionMatch sizeMatch = sizeRe.match(line);
+    if (sizeMatch.hasMatch()) {
+        // 把 git 的二进制单位换算为字节
+        const QString unit = sizeMatch.captured(2);
+        double multiplier = 1.0;
+        if (unit == QLatin1String("KiB"))
+            multiplier = 1024.0;
+        else if (unit == QLatin1String("MiB"))
+            multiplier = 1024.0 * 1024.0;
+        else if (unit == QLatin1String("GiB"))
+            multiplier = 1024.0 * 1024.0 * 1024.0;
+
+        // 只有数值增长时才发出信号，减少界面刷新次数
+        const qint64 bytes = static_cast<qint64>(sizeMatch.captured(1).toDouble() * multiplier);
+        if (bytes > m_pullRepoBytes) {
+            m_pullRepoBytes = bytes;
+            emit pull_traffic(m_pullDoneBytes + m_pullRepoBytes);
+        }
+    }
+
+    return isRemoteLine || percentMatch.hasMatch() || sizeMatch.hasMatch();
 }
 
 /**

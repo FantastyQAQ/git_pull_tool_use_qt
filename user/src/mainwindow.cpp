@@ -2,8 +2,8 @@
  * @file        mainwindow.cpp
  * @brief       主窗口实现：界面搭建、仓库表格/日志展示与操作入口
  * @author      lch (fantasylch@foxmail.com)
- * @version     1.6
- * @date        20261108
+ * @version     1.8
+ * @date        20261113
  * @note        扫描与拉取逻辑在 GitManager 中异步执行，日志、代次、进度与勾选状态统一维护
  *
  * @copyright   Copyright (c) 2026 by OLE, All Rights Reserved.
@@ -18,6 +18,8 @@
  * <tr><td>20261108    <td>1.4       <td>lch       <td>移除重复应用标题，名称改为 Git 批量拉取工具
  * <tr><td>20261108    <td>1.5       <td>lch       <td>移除设置持久化，默认扫描 E 盘、无 E 盘用 C 盘
  * <tr><td>20261108    <td>1.6       <td>lch       <td>表格支持拖动多选，右键菜单新增选择/取消选择
+ * <tr><td>20261113    <td>1.7       <td>lch       <td>扫描完成后按落后数自动勾选，无变化的取消勾选
+ * <tr><td>20261113    <td>1.8       <td>lch       <td>状态栏新增当前仓库进度与拉取流量，流量按 k / M 双单位显示
  * </table>
  */
 #include "mainwindow.h"
@@ -99,6 +101,23 @@ QFont tool_bar_button_font()
     return font;
 }
 
+/**
+ * @brief       将累计流量格式化为 k 与 M 两种单位同时显示的文本
+ *
+ * @param[in]   bytes 累计传输字节数
+ * @return      形如 "流量 1536k / 1.50M" 的展示文本
+ * @details     k 为 KiB 取整显示，M 为 MiB 保留两位小数；两者表示同一个数值，便于同时看清小流量与大流量
+ * @doxygen_sig_fp ada6f3f77f2a6eb9
+ */
+QString format_traffic(qint64 bytes)
+{
+    const double kib = bytes / 1024.0;
+    const double mib = bytes / (1024.0 * 1024.0);
+    return QStringLiteral("流量 %1k / %2M")
+        .arg(kib, 0, 'f', 0)
+        .arg(mib, 0, 'f', 2);
+}
+
 } // namespace
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -121,7 +140,7 @@ MainWindow::MainWindow(QWidget *parent)
 {
     setWindowTitle(QStringLiteral(APP_FULL_TITLE));
     // 工具栏放大后略宽于默认尺寸，窗口适当加宽，避免右侧「关于/更新说明/退出」被挤压
-    resize(1200, 720);
+    resize(2600, 1500);
     setup_ui();
 
     // Git 扫描/拉取功能对象，随窗口销毁自动释放
@@ -138,6 +157,11 @@ MainWindow::MainWindow(QWidget *parent)
     // 拉取进度回传到状态栏进度条（总数已在 pull_repos 里设置，无需重复）
     connect(m_gitManager, &GitManager::pull_progress, this,
             [this](int done, int /*total*/) { m_progress->setValue(done); });
+    // 当前仓库阶段百分比与本轮累计流量回传到状态栏
+    connect(m_gitManager, &GitManager::pull_repo_progress, this,
+            [this](int percent) { m_repoProgress->setValue(percent); });
+    connect(m_gitManager, &GitManager::pull_traffic, this,
+            [this](qint64 bytes) { m_trafficLabel->setText(format_traffic(bytes)); });
     // 单仓库结果写入表格对应行
     connect(m_gitManager, &GitManager::repo_result,
             this, &MainWindow::on_repo_result);
@@ -241,10 +265,10 @@ void MainWindow::setup_ui()
     header->setStretchLastSection(false);
     header->setDefaultAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     m_table->setColumnWidth(0, 38);
-    m_table->setColumnWidth(1, 500);
+    m_table->setColumnWidth(1, 300);
     m_table->setColumnWidth(2, 150);
-    m_table->setColumnWidth(3, 150);
-    m_table->setColumnWidth(4, 100);
+    m_table->setColumnWidth(3, 250);
+    m_table->setColumnWidth(4, 200);
     m_table->setColumnWidth(5, 800);
     repoLayout->addWidget(m_table, 1);
     splitter->addWidget(repoPanel);
@@ -434,9 +458,10 @@ void MainWindow::setup_tool_bar(QVBoxLayout *mainVBox)
     connect(m_selectAllCb, &QCheckBox::stateChanged, this, &MainWindow::on_select_all);
     lay->addWidget(m_selectAllCb);
 
-    // 默认扫描只读现有远程引用，用户明确勾选后才执行网络 fetch
+    // 默认勾选同步：扫描前先 fetch，远程跟踪引用才是最新，落后提交数才准确；取消勾选则只读本地缓存
     m_fetchRemoteCb = new QCheckBox(QStringLiteral("扫描时同步远程"), bar);
     m_fetchRemoteCb->setToolTip(QStringLiteral("勾选后扫描会执行 git fetch --prune --no-tags，更新远程跟踪引用"));
+    m_fetchRemoteCb->setChecked(true);
     apply_check_box_font(m_fetchRemoteCb);
     lay->addWidget(m_fetchRemoteCb);
 
@@ -465,8 +490,8 @@ void MainWindow::setup_tool_bar(QVBoxLayout *mainVBox)
 /**
  * @brief 创建状态栏
  *
- * 左侧为摘要标签（仓库统计），右侧为拉取进度条（永久部件）。
- * 进度条默认隐藏，进入拉取流程时显示。
+ * 左侧为摘要标签（仓库统计），右侧依次为总进度条、当前仓库进度条（带百分比）、拉取流量（永久部件）。
+ * 三个进度控件默认隐藏，进入拉取流程时显示；流量标签在拉取结束后保留最终值。
  * @return      none
  * @retval      none
  * @details     none
@@ -482,6 +507,20 @@ void MainWindow::setup_status_bar()
     m_progress->setTextVisible(false);
     m_progress->setVisible(false);
     statusBar()->addPermanentWidget(m_progress);
+
+    // 当前仓库进度显示百分比文字，范围固定为 0-100
+    m_repoProgress = new QProgressBar(this);
+    m_repoProgress->setFixedWidth(160);
+    m_repoProgress->setRange(0, 100);
+    m_repoProgress->setFormat(QStringLiteral("%p%"));
+    m_repoProgress->setVisible(false);
+    statusBar()->addPermanentWidget(m_repoProgress);
+
+    // 流量文本长度随数值变化，给一个最小宽度避免状态栏跳动
+    m_trafficLabel = new QLabel(this);
+    m_trafficLabel->setMinimumWidth(200);
+    m_trafficLabel->setVisible(false);
+    statusBar()->addPermanentWidget(m_trafficLabel);
 }
 
 /**
@@ -701,7 +740,8 @@ void MainWindow::on_scan_result(int scanId, int repoIndex, RepoInfo info)
  * @param[in]   {aborted} bool true 表示扫描被用户中止
  * @return      none
  * @retval      none
- * @details     统计数据直接遍历 m_repos 得出；中止时表格保留已采集的部分结果
+ * @details     统计数据直接遍历 m_repos 得出；未中止时按落后数自动勾选（有落后提交的勾选，
+ *              其余取消）；中止时表格保留已采集的部分结果且保持原勾选
  * @doxygen_sig_fp 0909728d5cb376a6
  * @param[in]   {scanId} int 回传扫描代次
  */
@@ -716,6 +756,21 @@ void MainWindow::on_scan_finished(int scanId, bool aborted)
     m_pullAllBtn->setEnabled(!m_repos.isEmpty());
     m_pullSelectedBtn->setEnabled(!m_repos.isEmpty());
     update_select_all_state();
+
+    // 未中止时按落后数自动勾选：有落后提交（含分叉）的仓库勾选，其余取消勾选；
+    // 中止时保留扫描前的勾选状态，避免未采集的行被误改
+    if (!aborted) {
+        QVector<int> changedRows;
+        QVector<int> unchangedRows;
+        for (int i = 0; i < m_repos.size(); ++i) {
+            if (m_repos[i].scanned && m_repos[i].behind > 0)
+                changedRows.append(i);
+            else
+                unchangedRows.append(i);
+        }
+        set_rows_checked(changedRows, true);
+        set_rows_checked(unchangedRows, false);
+    }
 
     // 统计只依据已采集状态；未采集的骨架行不会计入可更新数量
     int behindCount = 0;
@@ -920,6 +975,12 @@ void MainWindow::pull_repos(const QVector<int> &indices)
     m_progress->setRange(0, indices.size());
     m_progress->setValue(0);
 
+    // 当前仓库进度与流量从本轮开始重新计数
+    m_repoProgress->setValue(0);
+    m_repoProgress->setVisible(true);
+    m_trafficLabel->setText(format_traffic(0));
+    m_trafficLabel->setVisible(true);
+
     append_log(QStringLiteral("═══ 开始拉取 %1 个仓库…").arg(indices.size()),
               QColor(0, 100, 200));
 
@@ -966,7 +1027,9 @@ void MainWindow::on_repo_result(int repoIndex, const QString &status,
  */
 void MainWindow::on_pull_finished(bool aborted)
 {
+    // 流量标签保留最终值，直到下一轮拉取开始
     m_progress->setVisible(false);
+    m_repoProgress->setVisible(false);
     m_scanBtn->setEnabled(true);
     m_pullAllBtn->setEnabled(!m_repos.isEmpty());
     m_pullSelectedBtn->setEnabled(!m_repos.isEmpty());
