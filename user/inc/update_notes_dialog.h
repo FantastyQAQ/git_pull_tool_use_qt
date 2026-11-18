@@ -1,5 +1,5 @@
 /**
- * @file        updatenotesdialog.h
+ * @file        update_notes_dialog.h
  * @brief       「更新说明」窗口：非模态显示 docs/README.zh_CN.md 中的「更新记录」章节
  * @author      lch (fantasylch@foxmail.com)
  * @version     1.1
@@ -27,15 +27,27 @@ class UpdateNotesDialog : public QWidget {
     Q_OBJECT
   public:
     explicit UpdateNotesDialog(QWidget *parent = nullptr);
+    /**
+     * @brief       析构函数（默认实现，无额外清理）
+     *
+     */
     ~UpdateNotesDialog();
 
   private:
     // 读取资源中的 README 并截取「更新记录」章节，返回原始 Markdown 文本。
-    static QString loadUpdateNotes();
+    /**
+     * @brief       读取资源中的 README 并截取「更新记录」章节，返回原始 Markdown 文本
+     *
+     */
+    static QString load_update_notes();
     // 把「更新记录」片段转换为 QTextBrowser 可显示的简单 HTML。
-    static QString notesToHtml(const QString &markdown);
+    /**
+     * @brief       把「更新记录」片段转换为 QTextBrowser 可显示的简单 HTML
+     *
+     */
+    static QString notes_to_html(const QString &markdown);
 
-    QTextBrowser *m_pBrowser;
+    QTextBrowser *m_browser;
 };
 
 #endif // UPDATENOTESDIALOG_H

@@ -1,9 +1,9 @@
 #include <windows.h>
 
-// 应用元信息宏（版本号 / 构建日期等）统一来自 appinfo.h，
+// 应用元信息宏（版本号 / 构建日期等）统一来自 app_info.h，
 // 保证 exe 属性里的版本信息与窗口标题、关于对话框永远一致。
 // 这里按工程根目录的相对路径写，配合 .pro 里的 --include-dir=. 一起生效。
-#include "user/inc/appinfo.h"
+#include "user/inc/app_info.h"
 
 IDI_ICON1	ICON	DISCARDABLE	"icon\\app_256.ico"
 

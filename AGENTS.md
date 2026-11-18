@@ -24,7 +24,8 @@
 - **函数内部注释要充分**：函数体内要有足够详细的注释，描述实现逻辑和各段代码的具体功能；关键分支、状态切换、边界处理等位置必须有注释说明。**不允许出现大段代码没有一句注释的情况。**
 - **源文件（.c/.cpp 等）中的注释要详细**：函数定义和重要代码定义处，须以注释块详细描述其功能、设计目标、适用场景、注意事项（如调用时机、线程/中断上下文限制、参数取值范围、副作用等）。**源文件的注释必须使用 `doxygen-comment` 技能生成/维护**（Doxygen 风格），不要手工随意编写。
 - **头文件（.h 等）中的注释要简略**：头文件中的函数声明不需要大段说明，以单行简略注释为主，说清"这个函数是做什么的"即可，详细说明留在源文件中。
-- **函数命名统一 snake_case**：函数名全小写、用下划线分隔、以"动词 + 名词"结构命名（如 `scan_repos`、`append_log`、`run_git`）；判断类函数用 `check_` 前缀（如 `check_github_repo`），返回 bool 不用 `is_` 开头；Qt 信号命名同样遵循 snake_case + 动宾结构（如 `log_message`、`pull_finished`）；槽函数用 `on_` 前缀（如 `on_scan`、`on_pull_all`）。禁止在函数命名中使用 camelCase / PascalCase；成员变量仍用 `m_` 前缀，类型与常量命名不受此条约束。
+- **函数命名统一 snake_case**：函数名全小写、用下划线分隔、以"动词 + 名词"结构命名（如 `scan_repos`、`append_log`、`run_git`）；判断类函数用 `check_` 前缀（如 `check_github_repo`），返回 bool 不用 `is_` 开头；取单个值/状态的访问函数用 `get_` 前缀（如 `get_options`、`get_cache_path`）；Qt 信号命名同样遵循 snake_case + 动宾结构（如 `log_message`、`progress_changed`）；槽函数用 `on_` 前缀（如 `on_scan`、`on_pull_all`）。禁止在函数命名中使用 camelCase / PascalCase；Qt 虚函数重写保持基类名不变；成员变量仍用 `m_` 前缀，类型与常量命名不受此条约束。
+- **源码文件命名同样统一 snake_case**：文件名全小写、下划线分隔（如 `key_manager.c`、`app_config.h`），禁止 camelCase / PascalCase 的文件名（如 `keyManager.c`、`AppConfig.h`）；新增文件同样按此命名。
 
 ## 行为准则
 
@@ -161,17 +162,17 @@ Git 批量拉取工具：基于 Qt Widgets 的 Windows 桌面程序。递归扫�
 ### 关键文件
 
 - `user/src/main.cpp`：程序入口
-- `user/src/mainwindow.cpp` / `user/inc/mainwindow.h`：主窗口 UI 与 GitManager 回传结果的展示
-- `user/src/gitmanager.cpp` / `user/inc/gitmanager.h`：Git 扫描与批量拉取功能类
-- `git_pull_tool.pro`：qmake 工程配置（core gui widgets，c++17，RC_FILE 图标，RC_INCLUDEPATH 与 QMAKE_PRE_LINK 保证版本资源与 appinfo.h 联动）
+- `user/src/main_window.cpp` / `user/inc/main_window.h`：主窗口 UI 与 GitManager 回传结果的展示
+- `user/src/git_manager.cpp` / `user/inc/git_manager.h`：Git 扫描与批量拉取功能类
+- `git_pull_tool.pro`：qmake 工程配置（core gui widgets，c++17，RC_FILE 图标，RC_INCLUDEPATH 与 QMAKE_PRE_LINK 保证版本资源与 app_info.h 联动）
 - `git_pull_tool_resource.rc`：exe 图标与版本信息资源
-- `user/inc/appinfo.h`：应用元信息宏（名称 / 版本号 / 构建日期 / 作者），见下节
+- `user/inc/app_info.h`：应用元信息宏（名称 / 版本号 / 构建日期 / 作者），见下节
 - `docs/README.zh_CN.md`：完整变更记录（根目录 `README.md` 只留索引）
-- 扫描根目录不做持久化，启动时由 `default_scan_root()` 选择：优先 `E:/`，不存在则 `C:/`
+- 扫描根目录不做持久化，启动时由 `get_default_scan_root()` 选择：优先 `E:/`，不存在则 `C:/`
 
 ### 版本号维护（只在发布时升版）
 
-`user/inc/appinfo.h` 里三个宏的职责与更新时机不同，不要一改代码就无脑升版：
+`user/inc/app_info.h` 里三个宏的职责与更新时机不同，不要一改代码就无脑升版：
 
 - `APP_VERSION`：显示版本号 `SV01.NNN`。**只在发布版本时**递增末三位（如 `SV01.001` → `SV01.002`）。
 - `APP_VERSION_NUM`：数字版本号，必须与 `APP_VERSION` 末三位一一对应（`SV01.002` → `1,0,0,2`），与 `APP_VERSION` 同时改。
@@ -185,12 +186,12 @@ Git 批量拉取工具：基于 Qt Widgets 的 Windows 桌面程序。递归扫�
 
 拿不准是否算发布时，按小改动处理，并在收尾时提醒用户「本次未升版本号，如需发版请告知」。
 
-本工程对应：三个宏均在 `user/inc/appinfo.h`；`APP_VERSION_NUM` 一律按 `1,0,0,NNN` 与 `APP_VERSION` 末三位对应。
+本工程对应：三个宏均在 `user/inc/app_info.h`；`APP_VERSION_NUM` 一律按 `1,0,0,NNN` 与 `APP_VERSION` 末三位对应。
 
 注意事项（与升版时机无关的工程约定，继续沿用）：
 
 - `APP_FULL_TITLE` 由这些宏自动拼接（窗口标题、关于对话框都用它），不需要改动。
-- `git_pull_tool_resource.rc` 已 `#include "user/inc/appinfo.h"`，exe 属性里的「文件版本 / 产品版本 / 产品名 / 版权」全部由宏派生，禁止在 rc 里重新硬编码版本号或日期。
-- `.pro` 的 `QMAKE_PRE_LINK` 会在每次链接前强制重跑 windres，所以只改 `appinfo.h` 也能让 exe 属性同步刷新；不要删掉这段，否则版本资源会滞后。
+- `git_pull_tool_resource.rc` 已 `#include "user/inc/app_info.h"`，exe 属性里的「文件版本 / 产品版本 / 产品名 / 版权」全部由宏派生，禁止在 rc 里重新硬编码版本号或日期。
+- `.pro` 的 `QMAKE_PRE_LINK` 会在每次链接前强制重跑 windres，所以只改 `app_info.h` 也能让 exe 属性同步刷新；不要删掉这段，否则版本资源会滞后。
 - 其它元信息（`APP_NAME`、作者、邮箱、版权年份）不在例行更新范围内，只有用户明确要求时才改。
 - 发版改宏后重新执行 `mingw32-make`（release），确认窗口标题显示新版本号与日期；需要时用 `(Get-Item release\git_pull_tool.exe).VersionInfo` 核对 exe 属性里的版本字符串是否一致。

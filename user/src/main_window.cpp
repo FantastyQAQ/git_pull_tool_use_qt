@@ -1,5 +1,5 @@
 /**
- * @file        mainwindow.cpp
+ * @file        main_window.cpp
  * @brief       主窗口实现：界面搭建、仓库表格/日志展示与操作入口
  * @author      lch (fantasylch@foxmail.com)
  * @version     1.8
@@ -22,11 +22,11 @@
  * <tr><td>20261113    <td>1.8       <td>lch       <td>状态栏新增当前仓库进度与拉取流量，流量按 k / M 双单位显示
  * </table>
  */
-#include "mainwindow.h"
+#include "main_window.h"
 
-#include "appinfo.h"
-#include "aboutdialog.h"
-#include "updatenotesdialog.h"
+#include "app_info.h"
+#include "about_dialog.h"
+#include "update_notes_dialog.h"
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -53,9 +53,9 @@ constexpr int kMaxLogBlocks = 2000;
  * @brief       计算启动时使用的默认扫描根目录
  * @return      优先返回 E 盘根目录；E 盘不存在时返回 C 盘根目录
  * @details     每次启动都重新扫描，不读取任何历史记录，因此这里只按盘符存在性选择
- * @doxygen_sig_fp 5c1a0b7f2e6d4a91
+ * @doxygen_sig_fp 7b96d9769c0e534a
  */
-QString default_scan_root()
+QString get_default_scan_root()
 {
     // 候选盘符按优先级排列：E 盘优先，其次 C 盘
     const QStringList candidates = { QStringLiteral("E:/"), QStringLiteral("C:/") };
@@ -71,9 +71,9 @@ QString default_scan_root()
  * @brief       判断仓库是否可安全进入拉取队列
  * @param[in]   {repo} const RepoInfo& 已采集的仓库状态
  * @return      已采集且可安全拉取时返回 true
- * @doxygen_sig_fp 1cb356930c994aaa
+ * @doxygen_sig_fp 11ac7e7038feef51
  */
-bool is_pullable(const RepoInfo &repo)
+bool check_pullable(const RepoInfo &repo)
 {
     return repo.scanned && repo.pullable && !repo.detached && !repo.inProgress &&
            !repo.noUpstream && !repo.dirty && repo.ahead == 0;
@@ -89,9 +89,9 @@ bool is_pullable(const RepoInfo &repo)
  *              保证比正文略突出但不显臃肿。
  *              默认字体以磅值描述时走 setPointSizeF，以像素描述时走 setPixelSize，
  *              两种取值方式都兼容（pointSizeF 返回 -1 表示未按磅设置）。
- * @doxygen_sig_fp 2f8b41c6d95a370e
+ * @doxygen_sig_fp 138c2c279d2dcb45
  */
-QFont tool_bar_button_font()
+QFont apply_tool_bar_button_font()
 {
     QFont font = QApplication::font();
     if (font.pointSizeF() > 0)
@@ -131,7 +131,7 @@ QString format_traffic(qint64 bytes)
  * @return      none（构造/析构函数，无返回值）
  * @retval      none
  * @details     GitManager 以本窗口为父对象，随窗口销毁自动释放；
- *              窗口标题取自 appinfo.h 的 APP_FULL_TITLE（名称+版本+构建日期）；
+ *              窗口标题取自 app_info.h 的 APP_FULL_TITLE（名称+版本+构建日期）；
  *              不读取任何历史记录，扫描根目录每次启动按盘符可用性重新决定
  * @doxygen_sig_fp 755a2b28c15df9d3
  */
@@ -150,21 +150,21 @@ MainWindow::MainWindow(QWidget *parent)
     // 扫描流程：骨架列表建表 → 单仓结果流式回填 → 收尾恢复按钮与汇总
     connect(m_gitManager, &GitManager::scan_list_ready,
             this, &MainWindow::on_scan_list);
-    connect(m_gitManager, &GitManager::scan_result,
-            this, &MainWindow::on_scan_result);
+    connect(m_gitManager, &GitManager::scan_result_ready,
+            this, &MainWindow::on_scan_result_ready);
     connect(m_gitManager, &GitManager::scan_finished,
             this, &MainWindow::on_scan_finished);
     // 拉取进度回传到状态栏进度条（总数已在 pull_repos 里设置，无需重复）
-    connect(m_gitManager, &GitManager::pull_progress, this,
+    connect(m_gitManager, &GitManager::pull_progress_changed, this,
             [this](int done, int /*total*/) { m_progress->setValue(done); });
     // 当前仓库阶段百分比与本轮累计流量回传到状态栏
-    connect(m_gitManager, &GitManager::pull_repo_progress, this,
+    connect(m_gitManager, &GitManager::pull_repo_progress_changed, this,
             [this](int percent) { m_repoProgress->setValue(percent); });
-    connect(m_gitManager, &GitManager::pull_traffic, this,
+    connect(m_gitManager, &GitManager::pull_traffic_changed, this,
             [this](qint64 bytes) { m_trafficLabel->setText(format_traffic(bytes)); });
     // 单仓库结果写入表格对应行
-    connect(m_gitManager, &GitManager::repo_result,
-            this, &MainWindow::on_repo_result);
+    connect(m_gitManager, &GitManager::repo_result_ready,
+            this, &MainWindow::on_repo_result_ready);
     // 队列结束后恢复按钮并延时重扫
     connect(m_gitManager, &GitManager::pull_finished,
             this, &MainWindow::on_pull_finished);
@@ -215,7 +215,7 @@ void MainWindow::setup_ui()
     auto *rootLabel = new QLabel(QStringLiteral("扫描目录"), central);
     rootLabel->setObjectName(QStringLiteral("fieldLabel"));
     rootRow->addWidget(rootLabel);
-    m_rootEdit = new QLineEdit(default_scan_root(), central);
+    m_rootEdit = new QLineEdit(get_default_scan_root(), central);
     m_rootEdit->setMinimumWidth(300);
     m_rootEdit->setClearButtonEnabled(true);
     rootRow->addWidget(m_rootEdit, 1);
@@ -411,7 +411,7 @@ void MainWindow::setup_tool_bar(QVBoxLayout *mainVBox)
 
     // 工具栏内所有按钮（含右侧关于/更新说明/退出）统一使用与「扫描目录」相同的字族，
     // 并在默认字号上放大，保证整行文字大小一致
-    const QFont buttonFont = tool_bar_button_font();
+    const QFont buttonFont = apply_tool_bar_button_font();
     const auto apply_button_font = [buttonFont](QPushButton *button) {
         button->setFont(buttonFont);
     };
@@ -578,7 +578,7 @@ void MainWindow::on_table_context_menu(const QPoint &pos)
  * @return      已勾选返回 true；行无效或该项不存在返回 false
  * @retval      false 行号越界或单元格缺失
  * @details     勾选状态存在表格项里（见 append_repo_row），不是独立控件
- * @doxygen_sig_fp 4f2b6d8c1e35a970
+ * @doxygen_sig_fp af11a2ee23df0e20
  */
 bool MainWindow::check_row_checked(int row) const
 {
@@ -595,7 +595,7 @@ bool MainWindow::check_row_checked(int row) const
  * @retval      none
  * @details     批量期间用 m_syncingSelectAll 抑制单行变化反复重算全选框，
  *              批量结束后统一同步一次，避免中途出现半选闪烁
- * @doxygen_sig_fp be9a39ff3f259e57
+ * @doxygen_sig_fp ff22ea6e2629b6fc
  */
 void MainWindow::set_rows_checked(const QVector<int> &rows, bool checked)
 {
@@ -617,7 +617,7 @@ void MainWindow::set_rows_checked(const QVector<int> &rows, bool checked)
  * @return      none
  * @retval      none
  * @details     只关心首列（勾选列）；批量修改期间由 m_syncingSelectAll 抑制
- * @doxygen_sig_fp 2c7e19ab54d03f86
+ * @doxygen_sig_fp 20a41f449dd29d00
  */
 void MainWindow::on_table_item_changed(QTableWidgetItem *item)
 {
@@ -678,7 +678,7 @@ void MainWindow::append_log(const QString &text, const QColor &color)
  * @retval      none
  * @details     扫描期间禁用扫描/拉取按钮、启用停止按钮（可中止扫描）；
  *              骨架表格、单行结果、收尾汇总分别由
- *              on_scan_list / on_scan_result / on_scan_finished 处理
+ *              on_scan_list / on_scan_result_ready / on_scan_finished 处理
  * @doxygen_sig_fp f8a8d2b569608d7f
  */
 void MainWindow::on_scan()
@@ -720,10 +720,10 @@ void MainWindow::on_scan_list(int scanId, QVector<RepoInfo> repos)
  * @return      none
  * @retval      none
  * @details     行号超出当前表格范围（期间表格被重置）则忽略本条结果
- * @doxygen_sig_fp 3c8ba4be443a7202
+ * @doxygen_sig_fp 1ae5cf7f68273fd2
  * @param[in]   {scanId} int 回传扫描代次
  */
-void MainWindow::on_scan_result(int scanId, int repoIndex, RepoInfo info)
+void MainWindow::on_scan_result_ready(int scanId, int repoIndex, RepoInfo info)
 {
     // 代次和行号都必须匹配，防止旧扫描结果覆盖新表格
     if (scanId != m_scanId || repoIndex < 0 || repoIndex >= m_table->rowCount() ||
@@ -907,7 +907,7 @@ void MainWindow::on_pull_all()
 {
     QVector<int> indices;
     for (int i = 0; i < m_repos.size(); ++i) {
-        if (is_pullable(m_repos[i]))
+        if (check_pullable(m_repos[i]))
             indices.append(i);
     }
     if (indices.isEmpty()) {
@@ -929,7 +929,7 @@ void MainWindow::on_pull_selected()
 {
     QVector<int> indices;
     for (int i = 0; i < m_repos.size(); ++i) {
-        if (check_row_checked(i) && is_pullable(m_repos[i]))
+        if (check_row_checked(i) && check_pullable(m_repos[i]))
             indices.append(i);
     }
     if (indices.isEmpty()) {
@@ -985,7 +985,7 @@ void MainWindow::pull_repos(const QVector<int> &indices)
               QColor(0, 100, 200));
 
     // 串行拉取队列由 GitManager 驱动（QTimer + 异步 QProcess），
-    // 进度经 pull_progress、结果经 repo_result 信号回传刷新 UI
+    // 进度经 pull_progress_changed、结果经 repo_result_ready 信号回传刷新 UI
     m_gitManager->start_pull(indices, m_repos);
 }
 
@@ -998,9 +998,9 @@ void MainWindow::pull_repos(const QVector<int> &indices)
  * @return      none
  * @retval      none
  * @details     none
- * @doxygen_sig_fp 4241db00aa134639
+ * @doxygen_sig_fp 714131d3c2c931b8
  */
-void MainWindow::on_repo_result(int repoIndex, const QString &status,
+void MainWindow::on_repo_result_ready(int repoIndex, const QString &status,
                               const QColor &color, bool behindCleared)
 {
     // 行号无效时忽略；拉取期间表格不会被重扫，当前代次结果可直接回写
@@ -1143,13 +1143,19 @@ void MainWindow::update_select_all_state()
  * @brief       模态弹出「关于」对话框
  *
  * @return      none
- * @details     对话框内容取自 appinfo.h 宏与 Qt 运行时信息
+ * @details     对话框内容取自 app_info.h 宏与 Qt 运行时信息
  * @doxygen_sig_fp e119773229ac67b1
  */
 // ═══════════════════════════════════════════════════════════════════════
 // 关于 / 更新说明 / 退出
 // ═══════════════════════════════════════════════════════════════════════
 
+/**
+ * @brief       打开关于对话框并等待用户关闭
+ *
+ * @return      none
+ * @doxygen_sig_fp e119773229ac67b1
+ */
 void MainWindow::on_about()
 {
     AboutDialog dlg(this);

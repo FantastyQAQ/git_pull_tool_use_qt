@@ -15,7 +15,7 @@
  * </table>
  */
 #include <QApplication>
-#include "mainwindow.h"
+#include "main_window.h"
 
 /**
  * @brief       程序入口：创建应用与主窗口并进入事件循环

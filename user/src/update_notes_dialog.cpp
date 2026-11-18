@@ -1,5 +1,5 @@
 /**
- * @file        updatenotesdialog.cpp
+ * @file        update_notes_dialog.cpp
  * @brief       更新说明窗口：非模态展示更新记录
  * @author      lch (fantasylch@foxmail.com)
  * @version     1.1
@@ -16,7 +16,7 @@
  * <tr><td>20261106    <td>1.1       <td>lch       <td>记录源改读 docs/README.zh_CN.md
  * </table>
  */
-#include "updatenotesdialog.h"
+#include "update_notes_dialog.h"
 
 #include <QFile>
 #include <QFont>
@@ -41,9 +41,9 @@ const char *kKeyColor   = "#2b6cb0"; // 行内代码色
  * @param[in]   {escapedLine} const QString& 已做 HTML 转义的文本
  * @return      转换后的 HTML 文本
  * @details     入参必须已转义，避免 README 内容中的尖括号被当作标签解析
- * @doxygen_sig_fp 9ba48dd206a0e160
+ * @doxygen_sig_fp 3294005c286b410b
  */
-QString inlineCodeHtml(const QString &escapedLine) {
+QString inline_code_html(const QString &escapedLine) {
     static const QRegularExpression reCode(QStringLiteral("`([^`]*)`"));
 
     // 替换串中的 \\1 表示正则第一个捕获组（反引号里的内容）。
@@ -68,7 +68,7 @@ QString inlineCodeHtml(const QString &escapedLine) {
  * @doxygen_sig_fp e2b3e5e74db5f0fc
  */
 UpdateNotesDialog::UpdateNotesDialog(QWidget *parent)
-    : QWidget(parent, Qt::Window), m_pBrowser(nullptr) {
+    : QWidget(parent, Qt::Window), m_browser(nullptr) {
     setWindowTitle(tr("更新说明"));
 
     QVBoxLayout *pLay = new QVBoxLayout(this);
@@ -85,16 +85,16 @@ UpdateNotesDialog::UpdateNotesDialog(QWidget *parent)
     pLay->addWidget(pTitle);
 
     // 正文：只读浏览器，占据窗口剩余空间，可滚动查看全部更新条目
-    m_pBrowser = new QTextBrowser(this);
-    const QString qsNotes = loadUpdateNotes();
+    m_browser = new QTextBrowser(this);
+    const QString qsNotes = load_update_notes();
     if (qsNotes.isEmpty()) {
-        m_pBrowser->setPlainText(tr("未找到更新记录"));
+        m_browser->setPlainText(tr("未找到更新记录"));
     } else {
-        m_pBrowser->setHtml(notesToHtml(qsNotes));
+        m_browser->setHtml(notes_to_html(qsNotes));
         // setHtml 后光标可能停在文末，导致首次打开就滚到底部；显式回到开头
-        m_pBrowser->moveCursor(QTextCursor::Start);
+        m_browser->moveCursor(QTextCursor::Start);
     }
-    pLay->addWidget(m_pBrowser, 1);
+    pLay->addWidget(m_browser, 1);
 
     // 底部「关闭」按钮：靠右放置
     QPushButton *pBtClose = new QPushButton(tr("关闭"), this);
@@ -124,9 +124,9 @@ UpdateNotesDialog::~UpdateNotesDialog() {}
  *
  * @return      更新记录 Markdown 原文，未找到时为空串
  * @details     从「# 更新记录」标题行之后截取到文件末尾
- * @doxygen_sig_fp e2c10efa72eb87d0
+ * @doxygen_sig_fp 719826ea0220f562
  */
-QString UpdateNotesDialog::loadUpdateNotes() {
+QString UpdateNotesDialog::load_update_notes() {
     // 完整更新记录在 docs/README.zh_CN.md（根目录 README.md 只放索引）
     QFile file(QStringLiteral(":/docs/README.zh_CN.md"));
     if (!file.open(QIODevice::ReadOnly))
@@ -156,9 +156,9 @@ QString UpdateNotesDialog::loadUpdateNotes() {
  * @param[in]   {markdown} const QString& 更新记录原始 Markdown 文本
  * @return      QTextBrowser 可显示的 HTML 文本
  * @details     仅处理标题行、编号条目和反引号行内代码，其余内容按普通段落原样输出
- * @doxygen_sig_fp a627d8f22c1b7bee
+ * @doxygen_sig_fp ed8c45b740fe5efa
  */
-QString UpdateNotesDialog::notesToHtml(const QString &markdown) {
+QString UpdateNotesDialog::notes_to_html(const QString &markdown) {
     // 编号条目：以「数字.」开头的行，例如「01. 添加 : ...」
     static const QRegularExpression reItem(QStringLiteral("^\\d+\\."));
 
@@ -177,13 +177,13 @@ QString UpdateNotesDialog::notesToHtml(const QString &markdown) {
                 text.remove(0, 1);
             text = text.trimmed();
             html += QStringLiteral("<h4 style=\"color:") + QString::fromLatin1(kTitleColor)
-                    + QStringLiteral(";\">") + inlineCodeHtml(text.toHtmlEscaped())
+                    + QStringLiteral(";\">") + inline_code_html(text.toHtmlEscaped())
                     + QStringLiteral("</h4>");
             continue;
         }
 
         // 普通行与编号条目都保留原文，编号条目额外左缩进以便区分层级
-        const QString body = inlineCodeHtml(line.toHtmlEscaped());
+        const QString body = inline_code_html(line.toHtmlEscaped());
         if (reItem.match(line).hasMatch()) {
             html += QStringLiteral("<p style=\"margin-left:18px;\">") + body
                     + QStringLiteral("</p>");

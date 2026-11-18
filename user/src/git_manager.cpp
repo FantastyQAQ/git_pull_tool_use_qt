@@ -1,5 +1,5 @@
 /**
- * @file        gitmanager.cpp
+ * @file        git_manager.cpp
  * @brief       Git 仓库扫描与批量拉取功能实现
  * @author      lch (fantasylch@foxmail.com)
  * @version     1.5
@@ -19,7 +19,7 @@
  * <tr><td>20261113    <td>1.5       <td>lch       <td>拉取改为 --progress 实时解析当前阶段百分比与传输流量
  * </table>
  */
-#include "gitmanager.h"
+#include "git_manager.h"
 
 #include <QDir>
 #include <QFile>
@@ -56,7 +56,7 @@ constexpr int kScanThreadCount = 4;       // 扫描并发线程数（每线程�
  *              单线程串行会让每个仓库的进程启动开销累加，改成多线程后总耗时接近
  *              单仓耗时；线程数固定，避免仓库很多时创建大量线程；
  *              本函数会阻塞到所有线程结束，只应在扫描工作线程中调用
- * @doxygen_sig_fp 4b7f0c1d9e2a6b31
+ * @doxygen_sig_fp e33c5069b1e2d4a8
  */
 void run_parallel(int taskCount, const QAtomicInt &abortFlag, const std::function<void(int)> &body)
 {
@@ -167,7 +167,7 @@ struct StatusSnapshot
  * @return      true 表示解析到分支信息（命令输出合法）
  * @details     v2 格式以 "# " 开头的为分支头信息，其余非空行均为文件状态；
  *              branch.ab 缺失或含 "?" 表示上游引用已失效，交由调用方判为统计失败
- * @doxygen_sig_fp 7d3b1c5a82f04e6d
+ * @doxygen_sig_fp 1b134fb8b20a123f
  */
 bool parse_status_v2(const QString &out, StatusSnapshot &snap)
 {
@@ -211,7 +211,7 @@ bool parse_status_v2(const QString &out, StatusSnapshot &snap)
  * @param[in]   repoPath 仓库根目录
  * @return      true 表示有未完成的操作
  * @details     纯文件存在性判断，不启动 git 子进程
- * @doxygen_sig_fp 1c8e5f4a93b7d02e
+ * @doxygen_sig_fp 4b75f21f9a9daed6
  */
 bool check_repo_in_progress(const QString &repoPath)
 {
@@ -406,7 +406,7 @@ void GitManager::scan_worker(int scanId, const QString &rootDir, bool fetchRemot
         const RepoInfo info = examine_repo(skeleton.absolutePath, rootDir,
                                           skeleton.remoteUrl, fetchRemote);
         // 逐仓回传：主线程按 repoIndex 回填对应行，完成一个就能看到一行
-        emit scan_result(scanId, index, info);
+        emit scan_result_ready(scanId, index, info);
         emit log_message(QStringLiteral("  ✔ %1  [%2]  %3")
             .arg(info.path, info.branch, info.status), Qt::black);
     });
@@ -431,7 +431,7 @@ RepoInfo GitManager::make_skeleton(const QString &repoPath, const QString &rootD
 {
     RepoInfo info;
     info.absolutePath = repoPath;
-    info.path = relative_display_path(repoPath, rootDir);
+    info.path = get_relative_display_path(repoPath, rootDir);
     info.remoteUrl = remoteUrl;
     info.branch = QStringLiteral("…");
     info.status = QStringLiteral("扫描中…");
@@ -488,9 +488,9 @@ QString GitManager::pick_remote_url(const QString &repoPath)
  * @param[in]   rootDir 扫描根目录
  * @return      相对路径；仓库即根目录时返回 "."
  * @details     用 QDir::relativeFilePath 按路径语义计算，避免按字符长度截断前缀
- * @doxygen_sig_fp 70db4fe34b6fb2cd
+ * @doxygen_sig_fp 60b19d8302622ebd
  */
-QString GitManager::relative_display_path(const QString &repoPath, const QString &rootDir)
+QString GitManager::get_relative_display_path(const QString &repoPath, const QString &rootDir)
 {
     const QString rel = QDir::cleanPath(QDir(rootDir).relativeFilePath(QDir::cleanPath(repoPath)));
     return rel.isEmpty() ? QStringLiteral(".") : rel;
@@ -580,7 +580,7 @@ RepoInfo GitManager::examine_repo(const QString &repoPath, const QString &rootDi
 {
     RepoInfo info;
     info.absolutePath = repoPath;
-    info.path = relative_display_path(repoPath, rootDir);
+    info.path = get_relative_display_path(repoPath, rootDir);
     info.remoteUrl = remoteUrl;
     // 已采集但尚未通过全部检查，pullable 保持 false，异常状态不会进入拉取队列
     info.scanned = true;
@@ -784,7 +784,7 @@ void GitManager::process_next_pull()
         // 防御性处理非法索引：不访问越界快照，记录后推进队列
         emit log_message(QStringLiteral("  ⚠ 跳过：仓库索引无效"), QColor(200, 150, 0));
         ++m_pullCursor;
-        emit pull_progress(m_pullCursor, m_pullQueue.size());
+        emit pull_progress_changed(m_pullCursor, m_pullQueue.size());
         QTimer::singleShot(0, this, &GitManager::process_next_pull);
         return;
     }
@@ -797,9 +797,9 @@ void GitManager::process_next_pull()
     if (!repo.scanned || !repo.pullable || repo.detached || repo.inProgress ||
         repo.noUpstream || repo.dirty || repo.ahead > 0) {
         emit log_message(QStringLiteral("  ⚠ 跳过：尚未完成状态检查"), QColor(200, 150, 0));
-        emit repo_result(repoIndex, QStringLiteral("⚠ 未检查，已跳过"), QColor(200, 150, 0), false);
+        emit repo_result_ready(repoIndex, QStringLiteral("⚠ 未检查，已跳过"), QColor(200, 150, 0), false);
         ++m_pullCursor;
-        emit pull_progress(m_pullCursor, m_pullQueue.size());
+        emit pull_progress_changed(m_pullCursor, m_pullQueue.size());
         QTimer::singleShot(0, this, &GitManager::process_next_pull);
         return;
     }
@@ -820,7 +820,7 @@ void GitManager::process_next_pull()
     m_pullRepoBytes = 0;
     m_pullLineBytes.clear();
     m_pullErrText.clear();
-    emit pull_repo_progress(0);
+    emit pull_repo_progress_changed(0);
 
     // 异步启动 git pull --ff-only --progress；看门狗限制单次拉取耗时
     QProcess *proc = new QProcess(this);
@@ -909,8 +909,8 @@ void GitManager::finish_pull_item(int repoIndex, const GitResult &res)
     // 当前仓库已结束：流量并入本轮累计，进度条补满到 100%
     m_pullDoneBytes += m_pullRepoBytes;
     m_pullRepoBytes = 0;
-    emit pull_repo_progress(100);
-    emit pull_traffic(m_pullDoneBytes);
+    emit pull_repo_progress_changed(100);
+    emit pull_traffic_changed(m_pullDoneBytes);
 
     if (res.ok) {
         // 比较拉取前后的 HEAD：只有提交真正前进才算刚更新
@@ -919,27 +919,27 @@ void GitManager::finish_pull_item(int repoIndex, const GitResult &res)
         const QString headAfter = after.out.trimmed();
         if (after.ok && headAfter != m_headBefore) {
             emit log_message(QStringLiteral("  ✔ 更新成功"), QColor(0, 180, 0));
-            emit repo_result(repoIndex, QStringLiteral("✔ 刚更新"), QColor(0, 180, 0), true);
+            emit repo_result_ready(repoIndex, QStringLiteral("✔ 刚更新"), QColor(0, 180, 0), true);
         } else if (after.ok) {
             emit log_message(QStringLiteral("  ✓ 已是最新"), QColor(0, 150, 0));
-            emit repo_result(repoIndex, QStringLiteral("✓ 已是最新"), QColor(0, 150, 0), true);
+            emit repo_result_ready(repoIndex, QStringLiteral("✓ 已是最新"), QColor(0, 150, 0), true);
         } else {
             emit log_message(QStringLiteral("  ❌ 拉取后读取 HEAD 失败"), Qt::red);
-            emit repo_result(repoIndex, QStringLiteral("✘ 状态未知"), Qt::red, false);
+            emit repo_result_ready(repoIndex, QStringLiteral("✘ 状态未知"), Qt::red, false);
         }
     } else if (m_abortFlag.load()) {
         // 用户中止当前进程：状态明确标为中止，不把它误报为网络或认证失败
         emit log_message(QStringLiteral("  ⏹ 当前仓库已中止"), QColor(200, 150, 0));
-        emit repo_result(repoIndex, QStringLiteral("⏹ 已中止"), QColor(200, 150, 0), false);
+        emit repo_result_ready(repoIndex, QStringLiteral("⏹ 已中止"), QColor(200, 150, 0), false);
     } else {
         // 失败：优先展示 stderr，截断避免单条日志过长
         emit log_message(QStringLiteral("  ❌ 失败: %1").arg(short_error(res)), Qt::red);
-        emit repo_result(repoIndex, QStringLiteral("✘ 拉取失败"), Qt::red, false);
+        emit repo_result_ready(repoIndex, QStringLiteral("✘ 拉取失败"), Qt::red, false);
     }
 
     // 进度按已完成数发出；队列收尾由 process_next_pull 统一处理
     ++m_pullCursor;
-    emit pull_progress(m_pullCursor, m_pullQueue.size());
+    emit pull_progress_changed(m_pullCursor, m_pullQueue.size());
     QTimer::singleShot(100, this, &GitManager::process_next_pull);
 }
 
@@ -1024,7 +1024,7 @@ bool GitManager::parse_pull_progress_line(const QString &rawLine)
 
     const QRegularExpressionMatch percentMatch = percentRe.match(line);
     if (percentMatch.hasMatch())
-        emit pull_repo_progress(qMin(100, percentMatch.captured(1).toInt()));
+        emit pull_repo_progress_changed(qMin(100, percentMatch.captured(1).toInt()));
 
     const QRegularExpressionMatch sizeMatch = sizeRe.match(line);
     if (sizeMatch.hasMatch()) {
@@ -1042,7 +1042,7 @@ bool GitManager::parse_pull_progress_line(const QString &rawLine)
         const qint64 bytes = static_cast<qint64>(sizeMatch.captured(1).toDouble() * multiplier);
         if (bytes > m_pullRepoBytes) {
             m_pullRepoBytes = bytes;
-            emit pull_traffic(m_pullDoneBytes + m_pullRepoBytes);
+            emit pull_traffic_changed(m_pullDoneBytes + m_pullRepoBytes);
         }
     }
 

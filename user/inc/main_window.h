@@ -1,5 +1,5 @@
 /**
- * @file        mainwindow.h
+ * @file        main_window.h
  * @brief       主窗口类声明：UI 展示与操作入口
  * @author      lch (fantasylch@foxmail.com)
  * @version     1.5
@@ -33,7 +33,7 @@
 #include <QTextEdit>
 #include <QVector>
 
-#include "gitmanager.h"
+#include "git_manager.h"
 
 class QVBoxLayout;
 
@@ -44,37 +44,149 @@ class MainWindow : public QMainWindow
 
 public:
     explicit MainWindow(QWidget *parent = nullptr);
+    /**
+     * @brief       析构函数（默认实现，控件由 Qt 父子关系释放）
+     *
+     */
     ~MainWindow();
 
 private slots:
+    /**
+     * @brief       手动启动扫描（清空旧日志）
+     *
+     */
     void on_scan();                            // 手动启动扫描（清空旧日志）
+    /**
+     * @brief       按指定代次骨架建表
+     *
+     */
     void on_scan_list(int scanId, QVector<RepoInfo> repos); // 按指定代次骨架建表
-    void on_scan_result(int scanId, int repoIndex, RepoInfo info); // 回填指定代次单行状态
+    /**
+     * @brief       回填指定代次单行状态
+     *
+     */
+    void on_scan_result_ready(int scanId, int repoIndex, RepoInfo info); // 回填指定代次单行状态
+    /**
+     * @brief       扫描结束：恢复按钮与汇总
+     *
+     */
     void on_scan_finished(int scanId, bool aborted); // 扫描结束：恢复按钮与汇总
+    /**
+     * @brief       一键拉取全部可拉仓库
+     *
+     */
     void on_pull_all();                        // 一键拉取全部可拉仓库
+    /**
+     * @brief       拉取勾选的仓库
+     *
+     */
     void on_pull_selected();                   // 拉取勾选的仓库
+    /**
+     * @brief       请求停止当前扫描/拉取队列
+     *
+     */
     void on_stop();                            // 请求停止当前扫描/拉取队列
+    /**
+     * @brief       全选/全不选
+     *
+     */
     void on_select_all(int state);             // 全选/全不选
+    /**
+     * @brief       浏览选择扫描根目录
+     *
+     */
     void on_browse();                          // 浏览选择扫描根目录
+    /**
+     * @brief       关于对话框
+     *
+     */
     void on_about();                           // 关于对话框
+    /**
+     * @brief       更新说明窗口（非模态）
+     *
+     */
     void on_update_notes();                    // 更新说明窗口（非模态）
+    /**
+     * @brief       退出程序
+     *
+     */
     void on_exit();                            // 退出程序
+    /**
+     * @brief       表格右键菜单
+     *
+     */
     void on_table_context_menu(const QPoint &pos); // 表格右键菜单
+    /**
+     * @brief       首列勾选变化后同步全选框
+     *
+     */
     void on_table_item_changed(QTableWidgetItem *item); // 首列勾选变化后同步全选框
-    void on_repo_result(int repoIndex, const QString &status, const QColor &color, bool behindCleared); // 写入单仓库拉取结果
+    /**
+     * @brief       写入单仓库拉取结果
+     *
+     */
+    void on_repo_result_ready(int repoIndex, const QString &status, const QColor &color, bool behindCleared); // 写入单仓库拉取结果
+    /**
+     * @brief       拉取结束：恢复按钮并按需重扫
+     *
+     */
     void on_pull_finished(bool aborted);       // 拉取结束：恢复按钮并按需重扫
 
 private:
+    /**
+     * @brief       搭建整体界面框架
+     *
+     */
     void setup_ui();         // 搭建整体界面框架
+    /**
+     * @brief       创建主工具栏按钮行
+     *
+     */
     void setup_tool_bar(QVBoxLayout *mainVBox); // 创建主工具栏按钮行
+    /**
+     * @brief       创建状态栏（摘要 + 进度条）
+     *
+     */
     void setup_status_bar(); // 创建状态栏（摘要 + 进度条）
+    /**
+     * @brief       为仓库建立表格行骨架
+     *
+     */
     void append_repo_row(int row, const RepoInfo &r); // 为仓库建立表格行骨架
+    /**
+     * @brief       回填单行状态/分支/落后数与颜色
+     *
+     */
     void update_repo_row(int row, const RepoInfo &r); // 回填单行状态/分支/落后数与颜色
+    /**
+     * @brief       追加一行日志
+     *
+     */
     void append_log(const QString &text, const QColor &color = Qt::black); // 追加一行日志
+    /**
+     * @brief       切换 UI 到拉取状态并启动队列
+     *
+     */
     void pull_repos(const QVector<int> &indices); // 切换 UI 到拉取状态并启动队列
+    /**
+     * @brief       启动扫描并决定是否清空日志
+     *
+     */
     void begin_scan(bool clearLog);            // 启动扫描并决定是否清空日志
+    /**
+     * @brief       根据各行勾选状态同步全选框
+     *
+     */
     void update_select_all_state();            // 根据各行勾选状态同步全选框
+    /**
+     * @brief       批量设置指定行勾选状态
+     *
+     */
     void set_rows_checked(const QVector<int> &rows, bool checked); // 批量设置指定行勾选状态
+    /**
+     * @brief       查询指定行首列是否勾选
+     *
+     */
     bool check_row_checked(int row) const;     // 查询指定行首列是否勾选
 
     QTableWidget *m_table;

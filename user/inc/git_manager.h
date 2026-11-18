@@ -1,5 +1,5 @@
 /**
- * @file        gitmanager.h
+ * @file        git_manager.h
  * @brief       Git 仓库扫描与批量拉取功能类声明（RepoInfo 与 GitManager）
  * @author      lch (fantasylch@foxmail.com)
  * @version     1.4
@@ -71,39 +71,147 @@ class GitManager : public QObject
 
 public:
     explicit GitManager(QObject *parent = nullptr);
+    /**
+     * @brief       析构函数：中止并回收拉取子进程
+     *
+     */
     ~GitManager();
 
+    /**
+     * @brief       启动扫描并返回本轮代次
+     *
+     */
     int  start_scan(const QString &rootDir, bool fetchRemote); // 启动扫描并返回本轮代次
+    /**
+     * @brief       串行拉取指定仓库
+     *
+     */
     void start_pull(const QVector<int> &indices, const QVector<RepoInfo> &repos); // 串行拉取指定仓库
+    /**
+     * @brief       中止扫描或立即终止当前拉取
+     *
+     */
     void request_abort();                                      // 中止扫描或立即终止当前拉取
 
 signals:
+    /**
+     * @brief       过程日志（文本+颜色）
+     *
+     */
     void log_message(const QString &text, const QColor &color); // 过程日志（文本+颜色）
+    /**
+     * @brief       指定代次的仓库骨架列表
+     *
+     */
     void scan_list_ready(int scanId, QVector<RepoInfo> repos);  // 指定代次的仓库骨架列表
-    void scan_result(int scanId, int repoIndex, RepoInfo info); // 指定代次的单仓库状态
+    /**
+     * @brief       指定代次的单仓库状态
+     *
+     */
+    void scan_result_ready(int scanId, int repoIndex, RepoInfo info); // 指定代次的单仓库状态
+    /**
+     * @brief       扫描结束
+     *
+     */
     void scan_finished(int scanId, bool aborted);               // 扫描结束
-    void pull_progress(int done, int total);                    // 拉取进度：已完成数/总数
-    void pull_repo_progress(int percent);                       // 当前仓库所处阶段的百分比（0-100）
-    void pull_traffic(qint64 bytes);                            // 本轮拉取累计传输流量（字节）
-    void repo_result(int repoIndex, const QString &status, const QColor &color, bool behindCleared); // 单仓库拉取结果
+    /**
+     * @brief       拉取进度：已完成数/总数
+     *
+     */
+    void pull_progress_changed(int done, int total);                    // 拉取进度：已完成数/总数
+    /**
+     * @brief       当前仓库所处阶段的百分比（0-100）
+     *
+     */
+    void pull_repo_progress_changed(int percent);                       // 当前仓库所处阶段的百分比（0-100）
+    /**
+     * @brief       本轮拉取累计传输流量（字节）
+     *
+     */
+    void pull_traffic_changed(qint64 bytes);                            // 本轮拉取累计传输流量（字节）
+    /**
+     * @brief       单仓库拉取结果
+     *
+     */
+    void repo_result_ready(int repoIndex, const QString &status, const QColor &color, bool behindCleared); // 单仓库拉取结果
+    /**
+     * @brief       拉取队列结束（含中止）
+     *
+     */
     void pull_finished(bool aborted);                           // 拉取队列结束（含中止）
 
 private:
+    /**
+     * @brief       扫描线程主体
+     *
+     */
     void scan_worker(int scanId, const QString &rootDir, bool fetchRemote); // 扫描线程主体
+    /**
+     * @brief       选取远端地址
+     *
+     */
     QString pick_remote_url(const QString &repoPath);                        // 选取远端地址
+    /**
+     * @brief       构造骨架信息
+     *
+     */
     RepoInfo make_skeleton(const QString &repoPath, const QString &rootDir, const QString &remoteUrl); // 构造骨架信息
+    /**
+     * @brief       BFS 查找 .git 目录
+     *
+     */
     QStringList find_git_repos(const QString &rootDir, int maxDepth);        // BFS 查找 .git 目录
+    /**
+     * @brief       采集单个仓库状态
+     *
+     */
     RepoInfo examine_repo(const QString &repoPath, const QString &rootDir,
                           const QString &remoteUrl, bool fetchRemote);       // 采集单个仓库状态
+    /**
+     * @brief       同步远程引用，返回错误文本
+     *
+     */
     QString fetch_remote_refs(const QString &repoPath);                      // 同步远程引用，返回错误文本
-    QString relative_display_path(const QString &repoPath, const QString &rootDir); // 计算展示路径
+    /**
+     * @brief       计算展示路径
+     *
+     */
+    QString get_relative_display_path(const QString &repoPath, const QString &rootDir); // 计算展示路径
+    /**
+     * @brief       同步执行 git 命令
+     *
+     */
     GitResult run_git(const QString &workDir, const QStringList &args, int timeoutMs); // 同步执行 git 命令
+    /**
+     * @brief       启动下一项或结束队列
+     *
+     */
     void process_next_pull();                                                 // 启动下一项或结束队列
+    /**
+     * @brief       统一回收拉取进程
+     *
+     */
     void finish_pull_process(int repoIndex, int exitCode, QProcess::ExitStatus exitStatus,
                              const QString &startError);                      // 统一回收拉取进程
+    /**
+     * @brief       回传单项结果并推进队列
+     *
+     */
     void finish_pull_item(int repoIndex, const GitResult &res);               // 回传单项结果并推进队列
+    /**
+     * @brief       强制结束当前拉取进程
+     *
+     */
     void kill_current_pull();                                                 // 强制结束当前拉取进程
+    /**
+     * @brief       读取并解析拉取进程的 stderr
+     *
+     */
     void consume_pull_stderr(QProcess *proc, bool flushTail);                 // 读取并解析拉取进程的 stderr
+    /**
+     * @brief       解析单行进度输出，返回是否为进度行
+     *
+     */
     bool parse_pull_progress_line(const QString &line);                       // 解析单行进度输出，返回是否为进度行
 
     QAtomicInt m_abortFlag;                 // 0 = 正常执行，1 = 用户请求中止

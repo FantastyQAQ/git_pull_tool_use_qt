@@ -1,10 +1,10 @@
 /**
- * @file        aboutdialog.cpp
+ * @file        about_dialog.cpp
  * @brief       「关于」对话框实现：大标题 + 编译时间/Qt 版本/作者/邮箱信息列表
  * @author      lch (fantasylch@foxmail.com)
  * @version     1.0
  * @date        20261106
- * @note        参考欧力小工具（protocol-analy）同名实现，信息源为 appinfo.h 宏与 Qt 运行时接口
+ * @note        参考欧力小工具（protocol-analy）同名实现，信息源为 app_info.h 宏与 Qt 运行时接口
  *
  * @copyright   Copyright (c) 2026 by OLE, All Rights Reserved.
  *
@@ -14,9 +14,9 @@
  * <tr><td>20261106    <td>1.0       <td>lch       <td>创建
  * </table>
  */
-#include "aboutdialog.h"
+#include "about_dialog.h"
 
-#include "appinfo.h"
+#include "app_info.h"
 
 #include <QFont>
 #include <QHBoxLayout>
@@ -32,7 +32,7 @@
  * @return      none（构造/析构函数，无返回值）
  * @retval      none
  * @details     大标题取 APP_FULL_TITLE；编译时间取预定义宏 __DATE__/__TIME__，
- *              Qt 版本取 qVersion()，作者与邮箱取 appinfo.h 宏
+ *              Qt 版本取 qVersion()，作者与邮箱取 app_info.h 宏
  * @doxygen_sig_fp eb29c6acf32f318f
  */
 AboutDialog::AboutDialog(QWidget *parent) : QDialog(parent) {

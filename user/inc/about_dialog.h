@@ -1,10 +1,10 @@
 /**
- * @file        aboutdialog.h
+ * @file        about_dialog.h
  * @brief       「关于」对话框：展示工具名、版本、编译时间、Qt 版本、作者与邮箱
  * @author      lch (fantasylch@foxmail.com)
  * @version     1.0
  * @date        20261106
- * @note        所有展示信息均取自 appinfo.h 中的宏或 Qt 运行时接口，方便统一修改
+ * @note        所有展示信息均取自 app_info.h 中的宏或 Qt 运行时接口，方便统一修改
  *
  * @copyright   Copyright (c) 2026 by OLE, All Rights Reserved.
  *
@@ -20,12 +20,16 @@
 #include <QDialog>
 
 // 「关于」对话框：展示工具名、版本、编译时间、Qt 版本、作者与邮箱。
-// 所有展示信息均取自 appinfo.h 中的宏或 Qt 运行时接口，方便统一修改。
+// 所有展示信息均取自 app_info.h 中的宏或 Qt 运行时接口，方便统一修改。
 class AboutDialog : public QDialog
 {
     Q_OBJECT
 public:
     explicit AboutDialog(QWidget *parent = nullptr);
+    /**
+     * @brief       析构函数（默认实现，无额外清理）
+     *
+     */
     ~AboutDialog();
 };
 
