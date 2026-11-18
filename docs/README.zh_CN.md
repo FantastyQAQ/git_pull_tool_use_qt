@@ -51,3 +51,4 @@
 03. 整理 : 源码文件名改为 snake_case（如 git_manager.cpp）；
 04. 整理 : docs/README.zh_CN.md 拆分工程说明与更新记录；
 05. 新增 : 补齐 60 处函数与声明的 Doxygen 注释；
+06. 整理 : .gitignore 补齐 IDE/AI 助手目录，助手产物不入库；

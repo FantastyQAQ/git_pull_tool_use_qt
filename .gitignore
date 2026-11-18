@@ -11,9 +11,16 @@ qrc_*.cpp
 ui_*.h
 object_script.*
 
-# IDE / 编辑器
+# IDE / AI 工具目录（本机配置与助手产物，与工程本身无关，整目录不入库）
 .vscode/
+.idea/
 .trae/
+.codebuddy/
+.workbuddy/
+.cursor/
+.claude/
+.qoder/
+.qoder-credits/
 *.pro.user
 
 # 截图等本地临时文件
