@@ -1,4 +1,4 @@
-QT       += core gui widgets
+QT       += core gui widgets network
 
 TARGET    = git_pull_tool
 TEMPLATE  = app
@@ -9,13 +9,27 @@ SOURCES += user/src/main.cpp \
            user/src/main_window.cpp \
            user/src/git_manager.cpp \
            user/src/about_dialog.cpp \
-           user/src/update_notes_dialog.cpp
+           user/src/update_notes_dialog.cpp \
+           user/src/online_update_dialog.cpp \
+           user/src/update_manifest.cpp \
+           user/src/update_verifier.cpp \
+           user/src/update_downloader.cpp \
+           user/src/update_applier.cpp
 
 HEADERS += user/inc/main_window.h \
            user/inc/git_manager.h \
            user/inc/app_info.h \
            user/inc/about_dialog.h \
-           user/inc/update_notes_dialog.h
+           user/inc/update_notes_dialog.h \
+           user/inc/online_update_dialog.h \
+           user/inc/update_config.h \
+           user/inc/update_manifest.h \
+           user/inc/update_verifier.h \
+           user/inc/update_downloader.h \
+           user/inc/update_applier.h
+
+# Windows CNG（bcrypt）用于在线更新清单的 RSA 验签，无需 OpenSSL
+LIBS += -lbcrypt
 
 # 头文件搜索路径（main.cpp 中 #include "main_window.h" 依赖此配置）
 INCLUDEPATH += user/inc

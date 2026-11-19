@@ -92,6 +92,11 @@ public:
      *
      */
     void request_abort();                                      // 中止扫描或立即终止当前拉取
+    /**
+     * @brief       判断扫描或批量拉取是否仍在进行
+     *
+     */
+    bool check_busy() const;                                   // 扫描或批量拉取是否仍在进行
 
 signals:
     /**

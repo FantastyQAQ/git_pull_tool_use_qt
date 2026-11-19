@@ -25,3 +25,15 @@ object_script.*
 
 # 截图等本地临时文件
 .screenshots/
+
+# 在线更新清单签名密钥（私钥不得入库）
+update_keys/
+
+# online update release manifests
+/publish_info/
+
+# packaged release exes (large binaries, not source)
+/pack/*.exe
+
+# bundled Qt runtime for EVB packaging
+/pack/app_32/

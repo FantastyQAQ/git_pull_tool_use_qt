@@ -26,6 +26,7 @@
 
 #include "app_info.h"
 #include "about_dialog.h"
+#include "online_update_dialog.h"
 #include "update_notes_dialog.h"
 
 #include <QVBoxLayout>
@@ -318,17 +319,25 @@ void MainWindow::setup_ui()
         }
         QWidget#toolBar QPushButton#navButton,
         QWidget#toolBar QPushButton#navAboutButton,
+        QWidget#toolBar QPushButton#navOnlineUpdateButton,
         QWidget#toolBar QPushButton#navUpdateButton,
         QWidget#toolBar QPushButton#navExitButton {
             padding: 7px 10px; min-height: 22px;
         }
-        /* 右侧三个窗口操作按钮用不同浅色底区分：
-           关于=浅蓝（信息）、更新说明=浅绿（内容）、退出=浅红（结束程序） */
+        /* 右侧四个窗口操作按钮用不同浅色底区分：
+           关于=浅蓝（信息）、在线更新=浅橙（会改动程序，需提示）、
+           更新说明=浅绿（内容）、退出=浅红（结束程序） */
         QWidget#toolBar QPushButton#navAboutButton {
             background: #eaf1fc; border: 1px solid #c3d8f5; color: #2166c1;
         }
         QWidget#toolBar QPushButton#navAboutButton:hover {
             background: #dbe8fb; border-color: #9dc0ee;
+        }
+        QWidget#toolBar QPushButton#navOnlineUpdateButton {
+            background: #fff4e0; border: 1px solid #f5d9a8; color: #b36b00;
+        }
+        QWidget#toolBar QPushButton#navOnlineUpdateButton:hover {
+            background: #ffe9c2; border-color: #e8b766;
         }
         QWidget#toolBar QPushButton#navUpdateButton {
             background: #e9f7ef; border: 1px solid #c2e6d1; color: #1d7a45;
@@ -390,7 +399,7 @@ void MainWindow::setup_ui()
  * @brief       创建主工具栏按钮行
  *
  * 按钮行左侧承载开始扫描、一键拉取全部、拉取选中、停止，
- * 以及「全选」与「扫描时同步远程」复选框，右侧为关于 / 更新说明 / 退出。
+ * 以及「全选」与「扫描时同步远程」复选框，右侧为关于 / 在线更新 / 更新说明 / 退出。
  * 直接嵌入主垂直布局，使用独立浅色容器区分操作区与内容区。
  * 按钮样式由主窗口统一提供，「开始扫描」使用蓝色突出主操作。
  *
@@ -479,9 +488,11 @@ void MainWindow::setup_tool_bar(QVBoxLayout *mainVBox)
         return button;
     };
     auto *aboutBtn = add_nav_button(QStringLiteral("关于"), QStringLiteral("navAboutButton"));
+    auto *onlineUpdateBtn = add_nav_button(QStringLiteral("在线更新"), QStringLiteral("navOnlineUpdateButton"));
     auto *updateBtn = add_nav_button(QStringLiteral("更新说明"), QStringLiteral("navUpdateButton"));
     auto *exitBtn = add_nav_button(QStringLiteral("退出"), QStringLiteral("navExitButton"));
     connect(aboutBtn, &QPushButton::clicked, this, &MainWindow::on_about);
+    connect(onlineUpdateBtn, &QPushButton::clicked, this, &MainWindow::on_online_update);
     connect(updateBtn, &QPushButton::clicked, this, &MainWindow::on_update_notes);
     connect(exitBtn, &QPushButton::clicked, this, &MainWindow::on_exit);
     mainVBox->addWidget(bar);
@@ -1191,6 +1202,22 @@ void MainWindow::on_update_notes()
     m_updateNotesWnd->show();
     m_updateNotesWnd->raise();
     m_updateNotesWnd->activateWindow();
+}
+
+/**
+ * @brief       打开在线更新窗口（模态）
+ *
+ * @return      none
+ * @retval      none
+ * @details     传入「仓库扫描或拉取是否在跑」的判定回调：在线更新启动新版本前需要确认
+ *              没有扫描或批量拉取正在占用 git 子进程与仓库工作区，否则容易留下半截状态。
+ *              回调在用户真正要下载或切换版本时才被调用，因此扫描/拉取期间打开窗口也能正确拦截
+ * @doxygen_sig_fp d9a8748ef6d15878
+ */
+void MainWindow::on_online_update()
+{
+    OnlineUpdateDialog dlg([this]() { return m_gitManager->check_busy(); }, this);
+    dlg.exec();
 }
 
 /**

@@ -107,6 +107,11 @@ private slots:
      */
     void on_update_notes();                    // 更新说明窗口（非模态）
     /**
+     * @brief       打开在线更新窗口
+     *
+     */
+    void on_online_update();                   // 打开在线更新窗口
+    /**
      * @brief       退出程序
      *
      */

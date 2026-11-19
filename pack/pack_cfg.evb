@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="windows-1252"?>
 <>
   <InputFile>E:\code\qt\github_pull_tool\release\git_pull_tool.exe</InputFile>
-  <OutputFile>E:\code\qt\github_pull_tool\pack\git_pull_tool_SV01.013.exe</OutputFile>
+  <OutputFile>E:\code\qt\github_pull_tool\pack\git_pull_tool_SV01.014.exe</OutputFile>
   <Files>
     <Enabled>True</Enabled>
     <DeleteExtractedOnExit>False</DeleteExtractedOnExit>

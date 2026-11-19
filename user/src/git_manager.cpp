@@ -1063,3 +1063,23 @@ void GitManager::request_abort()
     // 立即停止当前网络子进程，避免停止按钮只等待当前仓库自然结束
     kill_current_pull();
 }
+
+/**
+ * @brief       判断扫描或批量拉取是否仍在进行
+ *
+ * @return      扫描线程在运行或拉取队列未清空时返回 true
+ * @retval      none
+ * @details     拉取队列在 start_pull 时写入、在 process_next_pull 收尾时清空，
+ *              因此从开始到收尾（含中止后的收尾）之间都视为进行中；
+ *              扫描线程运行期间同样视为进行中。两者都只在主线程读写，无需加锁
+ * @doxygen_sig_fp 03547ee3b6235d1a
+ */
+bool GitManager::check_busy() const
+{
+    // 拉取队列未清空：批量拉取尚未收尾（包括等待下一项的间隙）
+    if (!m_pullQueue.isEmpty())
+        return true;
+
+    // 扫描线程仍在运行：扫描尚未结束
+    return m_scanThread && m_scanThread->isRunning();
+}
